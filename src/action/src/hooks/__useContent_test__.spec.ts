@@ -2,6 +2,7 @@ import { renderHook, act } from "@testing-library/react";
 import useContent from "./useContent";
 import UserContent from "../state/state";
 import { setupMockChromeAPI } from "../__mocks__/chrome";
+import { messageFactory } from "../utils/helpers";
 
 describe("useContent hook", () => {
   it("Should return the Eventemitter on the user content model ", async () => {
@@ -463,7 +464,7 @@ describe("useContent hook - create records", () => {
         type: "project",
         method: "create",
         success: false,
-        message: "DUPLICATE NAME"
+        message: "DUPLICATE NAME",
       },
     };
 
@@ -630,7 +631,7 @@ describe("useContent hook - create records", () => {
         type: "schema",
         method: "create",
         success: false,
-        message: "DUPLICATE SCHEMA NAME"
+        message: "DUPLICATE SCHEMA NAME",
       },
     };
     chrome.runtime.sendMessage.mockResolvedValue(mockResponse);
@@ -844,11 +845,213 @@ describe("useContent hook - create records", () => {
   });
 });
 
-describe("useContent hook - delete records", () => {});
+describe("useContent hook - delete records", () => {
+  it("Should remove project with correct id from local store", async () => {
+    //Set up
+    const project2 = "a11aa111-11aa-1111-a111-1a11a1a1a112";
+
+    const mockResponse: DatabaseResponse = {
+      operation: "database",
+      data: {
+        type: "project",
+        method: "delete",
+        success: true,
+      },
+    };
+    chrome.runtime.sendMessage.mockResolvedValue(mockResponse);
+    // Call hook - should update internal model when receives success response from sendMessage
+    const { result } = renderHook(() => useContent());
+    const responseMessage = await act(async () => {
+      const options: CRUDDataOptions = {
+        type: "project",
+        data: project2,
+        method: "delete",
+      };
+      const responseMessage = await result.current.emit("delete", options);
+      return responseMessage;
+    });
+
+    // Test - project should not appear in user content projects
+    const allProjects = await UserContent.events.emit("getAllOf", "projects");
+    const deletedProject = allProjects["a11aa111-11aa-1111-a111-1a11a1a1a112"];
+
+    expect(deletedProject).toBe(undefined);
+    expect(responseMessage).toEqual(mockResponse);
+  });
+
+  it("Should remove schema with correct id from local store", async () => {
+    //Set up
+    const schema2 = "s11aa111-11aa-1111-a111-1a11a1a1a112";
+
+    const mockResponse: DatabaseResponse = {
+      operation: "database",
+      data: {
+        type: "schema",
+        method: "delete",
+        success: true,
+      },
+    };
+    chrome.runtime.sendMessage.mockResolvedValue(mockResponse);
+    // Call hook - should update internal model when receives success response from sendMessage
+    const { result } = renderHook(() => useContent());
+    const responseMessage = await act(async () => {
+      const options: CRUDDataOptions = {
+        type: "schema",
+        data: schema2,
+        method: "delete",
+      };
+      const responseMessage = await result.current.emit("delete", options);
+      return responseMessage;
+    });
+
+    // Test - schema should not appear in user content projects
+    const allSchemas = await UserContent.events.emit("getAllOf", "schemas");
+    const deletedSchema = allSchemas["a11aa111-11aa-1111-a111-1a11a1a1a112"];
+
+    expect(deletedSchema).toBe(undefined);
+    expect(responseMessage).toEqual(mockResponse);
+  });
+
+  it("Should remove capture with correct id from local store", async () => {
+    //Set up
+    const captureData = {
+      project_id: "a11aa111-11aa-1111-a111-1a11a1a1a111",
+      id: "c11aa111-11aa-1111-a111-1a11a1a1a111"
+    };
+
+    const mockResponse: DatabaseResponse = {
+      operation: "database",
+      data: {
+        type: "capture",
+        method: "delete",
+        success: true,
+      },
+    };
+    chrome.runtime.sendMessage.mockResolvedValue(mockResponse);
+    // Call hook - should update internal model when receives success response from sendMessage
+    const { result } = renderHook(() => useContent());
+    const responseMessage = await act(async () => {
+      const options: CRUDDataOptions = {
+        type: "capture",
+        data: captureData,
+        method: "delete",
+      };
+      const responseMessage = await result.current.emit("delete", options);
+      return responseMessage;
+    });
+
+     // Test - search for deleted capture in user content model
+     const captures = await UserContent.events.emit("search", {
+      term: "c11aa111-11aa-1111-a111-1a11a1a1a111",
+      type: "capture",
+    });
+
+    expect(captures.length).toBe(0);
+    expect(responseMessage).toEqual(mockResponse);
+  });
+});
+
+describe("useContent hook - update records", ()=>{
+  it("Should change the project name name", async()=>{
+    const dummyDate = new Date();
+
+    const updatedTestProjectData: ProjectGroup = {
+      name: "updatedProject",
+      date_created: "2025-01-10T14:30:00",
+      last_edited: dummyDate.toISOString(), // Indicates current time since edit
+      id: "a11aa111-11aa-1111-a111-1a11a1a1a111",
+      captures: {},
+    };
+
+    const mockResponse: DatabaseResponse = {
+      operation: "database",
+      data: {
+        type: "project",
+        method: "update",
+        success: true,
+      },
+    };
+    chrome.runtime.sendMessage.mockResolvedValue(mockResponse);
+    // Call hook - should update internal model when receives success response from sendMessage
+    const { result } = renderHook(() => useContent());
+    const responseMessage = await act(async () => {
+      const options: CRUDDataOptions = {
+        type: "project",
+        data: updatedTestProjectData,
+        method: "update",
+      };
+      const responseMessage = await result.current.emit("update", options);
+      return responseMessage;
+    });
+
+    // Test - search for updated project data
+    const allProjects = await UserContent.events.emit("search", {
+      term: "updatedProject",
+      type: "project"
+    });
+
+
+    expect(allProjects.length).toBe(1);
+    expect(allProjects[0].name).toEqual(updatedTestProjectData.name);
+    expect(allProjects[0].last_edited).toEqual(dummyDate.toISOString());
+    expect(allProjects[0].date_created).toEqual(updatedTestProjectData.date_created);
+
+
+    expect(responseMessage).toEqual(mockResponse);
+  })
+
+  it("Should change schema details and body", async()=>{
+    const dummyDate = new Date();
+
+    const updatedTestProjectData: ProjectGroup = {
+      name: "updatedProject",
+      date_created: "2025-01-10T14:30:00",
+      last_edited: dummyDate.toISOString(), // Indicates current time since edit
+      id: "a11aa111-11aa-1111-a111-1a11a1a1a111",
+      captures: {},
+    };
+
+    const mockResponse: DatabaseResponse = {
+      operation: "database",
+      data: {
+        type: "project",
+        method: "update",
+        success: true,
+      },
+    };
+    chrome.runtime.sendMessage.mockResolvedValue(mockResponse);
+    // Call hook - should update internal model when receives success response from sendMessage
+    const { result } = renderHook(() => useContent());
+    const responseMessage = await act(async () => {
+      const options: CRUDDataOptions = {
+        type: "project",
+        data: updatedTestProjectData,
+        method: "update",
+      };
+      const responseMessage = await result.current.emit("update", options);
+      return responseMessage;
+    });
+
+    // Test - search for updated project data
+    const allProjects = await UserContent.events.emit("search", {
+      term: "updatedProject",
+      type: "project"
+    });
+
+
+    expect(allProjects.length).toBe(1);
+    expect(allProjects[0].name).toEqual(updatedTestProjectData.name);
+    expect(allProjects[0].last_edited).toEqual(dummyDate.toISOString());
+    expect(allProjects[0].date_created).toEqual(updatedTestProjectData.date_created);
+
+
+    expect(responseMessage).toEqual(mockResponse);
+  })
+})
 
 describe("Backend message factory", () => {
   it("Should return an object with correct keys and values for database operation message", () => {
-    const dummyMessageData: CRUDDataOptions = {
+    const dummyCreateMessageData: CRUDDataOptions = {
       method: "create",
       type: "capture",
       data: {
@@ -860,10 +1063,25 @@ describe("Backend message factory", () => {
         schema_id: "22334544",
       },
     };
-    const backendMessage = UserContent._messageFactory(
-      "database",
-      dummyMessageData
-    );
+
+    const dummyDeleteProjMessageData: CRUDDataOptions = {
+      method: "delete",
+      type: "project",
+      data: "project 1",
+    };
+
+
+    const dummyDeleteCapMessageData: CRUDDataOptions = {
+      method: "delete",
+      type: "capture",
+      data: {
+        project_id: "project id",
+        id: "capture id"
+      },
+    };
+
+    // Test create operation
+    const backendMessage = messageFactory("database", dummyCreateMessageData);
 
     // Check keys
     const backendMessageKeys = Object.keys(backendMessage);
@@ -871,7 +1089,20 @@ describe("Backend message factory", () => {
 
     // Check values
     expect(backendMessage.operation).toBe("database");
-    expect(backendMessage.data).toEqual(dummyMessageData);
+    expect(backendMessage.data).toEqual(dummyCreateMessageData);
+
+    // Test delete operation
+    const backendDeleteProjMessage = messageFactory("database", dummyDeleteProjMessageData);
+
+    // Check values
+    expect(backendDeleteProjMessage.operation).toBe("database");
+    expect(backendDeleteProjMessage.data).toEqual(dummyDeleteProjMessageData);
+
+    const backendDeleteCapMessage = messageFactory("database", dummyDeleteCapMessageData);
+
+    // Check values
+    expect(backendDeleteCapMessage.operation).toBe("database");
+    expect(backendDeleteCapMessage.data).toEqual(dummyDeleteCapMessageData);
   });
 
   it("Should throw a TypeError if an incorrect operation is provided", () => {
@@ -888,7 +1119,7 @@ describe("Backend message factory", () => {
       },
     };
     expect(() =>
-      UserContent._messageFactory("blueberry", dummyMessageData)
+      messageFactory("blueberry", dummyMessageData)
     ).toThrow(TypeError);
   });
 });

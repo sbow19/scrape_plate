@@ -228,5 +228,28 @@ export function validateCRUDOptions(options: CRUDDataOptions): void {
 
   // Validate data
   validateData(type, data);
-  // UserContent._validateData(type, data);
+}
+
+// HELPERS - REFACTOR - MOVE INTO SEPARATE MODULE WITH OTHER  VALIDATION FUNCTIONS
+export function messageFactory(
+  operation: string,
+  messageData: CRUDDataOptions
+): DatabaseMessage {
+  switch (operation) {
+    case "database":
+      return {
+        operation: operation,
+        data: messageData,
+      };
+    case "otherOperation":
+      return {
+        operation: operation,
+        data: {
+          otherField: "",
+          success: false,
+        },
+      };
+    default:
+      throw new TypeError("Message operation type incorrect - e.g. database");
+  }
 }

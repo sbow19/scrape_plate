@@ -4,7 +4,11 @@
  * hook
  */
 
-import { validateCRUDOptions, validateData } from "../utils/helpers";
+import {
+  messageFactory,
+  validateCRUDOptions,
+  validateData,
+} from "../utils/helpers";
 import { EventEmitter } from "./events";
 
 class UserContent {
@@ -140,6 +144,12 @@ class UserContent {
     // Create
     UserContent._eventEmitter.subscribe("create", UserContent._createData);
 
+    // Delete
+    UserContent._eventEmitter.subscribe("delete", UserContent._deleteData);
+
+    // Update
+    UserContent._eventEmitter.subscribe("update", UserContent._updateData);
+
     // TESTING: set test data
     UserContent._eventEmitter.subscribe(
       "set_test_data",
@@ -263,11 +273,10 @@ class UserContent {
     options: CRUDDataOptions
   ): Promise<DatabaseResponse> {
     // Validate create data options
-    validateCRUDOptions(options)
-    // UserContent._validateCRUDOptions(options);
+    validateCRUDOptions(options);
 
     // Compose background script message
-    const backendMessage = UserContent._messageFactory("database", options);
+    const backendMessage = messageFactory("database", options);
 
     //Determine data type and assign dates / unique ids
     let dataType;
@@ -325,67 +334,110 @@ class UserContent {
     });
   }
 
+  private static _deleteData(
+    options: CRUDDataOptions
+  ): Promise<DatabaseResponse> {
+    // Compose background script message
+    const backendMessage = messageFactory("database", options);
+
+    let dataType;
+    switch (options.type) {
+      case "capture":
+        dataType = "captures";
+        break;
+      case "project":
+        dataType = "projects";
+        break;
+      case "schema":
+        dataType = "schemas";
+        break;
+    }
+
+    return new Promise((resolve, reject) => {
+      // If successfully updated Indexeddb store, then we update local copy of USerContentModal
+      chrome.runtime
+        .sendMessage(backendMessage)
+        .then((response: DatabaseResponse) => {
+          if (response.data.success) {
+            // Respective data object deleted
+
+            if (dataType === "captures") {
+              delete UserContent._userContentModel["projects"][
+                options.data.project_id
+              ].captures[options.data.id];
+            } else {
+              delete UserContent._userContentModel[dataType][options.data];
+            }
+            // Return database response
+            resolve(response);
+          } else if (!response.data.success) {
+            reject(response);
+          }
+        })
+        .catch((error) => reject(error)); // Misc error
+    });
+  }
+
+  private static _updateData(
+    options: CRUDDataOptions
+  ): Promise<DatabaseResponse> {
+    // Validate create data options
+    validateCRUDOptions(options);
+
+    // Compose background script message
+    const backendMessage = messageFactory("database", options);
+
+    // Created time
+    const currentTime = new Date();
+    const d = currentTime.toISOString();
+
+    let dataType;
+    switch (options.type) {
+      case "capture":
+        dataType = "captures";
+        options.data.last_edited = d;
+        break;
+      case "project":
+        dataType = "projects";
+        options.data.last_edited = d;
+        break;
+      case "schema":
+        dataType = "schemas";
+        break;
+    }
+
+    return new Promise((resolve, reject) => {
+      // If successfully updated Indexeddb store, then we update local copy of USerContentModal
+      chrome.runtime
+        .sendMessage(backendMessage)
+        .then((response: DatabaseResponse) => {
+          if (response.data.success) {
+            // Everything is assigned their id as their respective key
+
+            if (dataType === "captures") {
+              UserContent._userContentModel["projects"][
+                options.data.project_id
+              ].captures[options.data.id] = options.data;
+            } else {
+              UserContent._userContentModel[dataType][options.data.id] =
+                options.data;
+            }
+
+            // Return database response
+            resolve(response);
+          } else if (!response.data.success) {
+            reject(response);
+          }
+        })
+        .catch((error) => reject(error)); // Misc error
+    });
+  }
+
   // Getter and setter functions
   static get events() {
     return UserContent._eventEmitter;
   }
 
-  // HELPERS - REFACTOR - MOVE INTO SEPARATE MODULE WITH OTHER  VALIDATION FUNCTIONS
-  private static _messageFactory(
-    operation: string,
-    messageData: CRUDDataOptions
-  ): DatabaseMessage {
-    switch (operation) {
-      case "database":
-        return {
-          operation: operation,
-          data: messageData,
-        };
-      case "otherOperation":
-        return {
-          operation: operation,
-          data: {
-            otherField: "",
-            success: false,
-          },
-        };
-      default:
-        throw new TypeError("Message operation type incorrect - e.g. database");
-    }
-  }
-
-  // /**
-  //  * Validates options provided for making CRUD operations
-  //  * @param options
-  //  */
-  // private static _validateCRUDOptions(options: CRUDDataOptions): void {
-  //   // Check keys are correct
-  //   const keys = ["method", "data", "type"];
-
-  //   for (const property of Object.keys(options)) {
-  //     if (!keys.includes(property))
-  //       throw new TypeError("CRUD options have incorrect keys");
-  //   }
-
-  //   // Check CRUD options conform to correct type
-  //   const { type, method, data } = options;
-
-  //   // Check data type
-  //   const dataTypes = ["project", "schema", "capture"];
-  //   if (typeof type !== "string" || !dataTypes.includes(type))
-  //     throw new TypeError("CRUD operation data type value incorrect");
-
-  //   // Check method
-  //   const methods = ["create", "update", "read", "delete"];
-  //   if (typeof method !== "string" || !methods.includes(method))
-  //     throw new TypeError("CRUD operation method value incorrect");
-
-  //   // Validate data
-  //   validateData(type, data)
-  //   // UserContent._validateData(type, data);
-  // }
-
- 
   // private  static  _validateData(
   //   dataType: string,
   //   data: Schema | Capture | ProjectGroup
@@ -420,7 +472,7 @@ class UserContent {
   //                 if (value.length > 20)
   //                   throw new Error(
   //                     "Project name must be less than 20 characters"
-  //                   )                 
+  //                   )
   //               }
   //               break;
   //             case "last_edited":

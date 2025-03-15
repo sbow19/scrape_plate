@@ -61,9 +61,15 @@ declare global {
   };
 
   type CRUDDataOptions =
-    | { method: "create" | "update" | "read" | "delete"; type: "capture"; data: Capture }
-    | { method: "create" | "update" | "read" | "delete"; type: "project"; data: ProjectGroup }
-    | { method: "create" | "update" | "read" | "delete"; type: "schema"; data: Schema };
+    | { method: "create" | "update" ; type: "capture"; data: Capture }
+    | { method: "create" | "update" ; type: "project"; data: ProjectGroup }
+    | { method: "create" | "update" ; type: "schema"; data: Schema }
+    | { method: "delete" ; type: "schema" | "project"; data: string}
+    | { method: "delete" ; type: "capture"; data: {
+      project_id: string
+      id: string
+    }}
+    
 
   // Define conditional data structures for different operations
 
