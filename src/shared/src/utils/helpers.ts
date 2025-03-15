@@ -234,7 +234,7 @@ export function validateCRUDOptions(options: CRUDDataOptions): void {
 export function messageFactory(
   operation: string,
   messageData: CRUDDataOptions
-): DatabaseMessage {
+): BackendMessage {
   switch (operation) {
     case "database":
       return {

@@ -36,7 +36,4 @@ describe("UserContent methods", () => {
 
         })
     })
-  
-
-  
 });

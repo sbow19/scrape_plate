@@ -8,6 +8,11 @@ declare global {
       last_used: string;
 
       username: string;
+
+      // Inform user of version updates
+      updateRequired: boolean;
+
+      currentProject: ProjectId
     };
     projects: {
       [key: string]: ProjectGroup; // Keys represent the name or the project group
@@ -35,7 +40,7 @@ declare global {
     name: string;
     date_created: string;
     last_edited: string;
-    id: string; ///uuid.v4()
+    id: ProjectId; ///uuid.v4()
     captures: {
       [key: string]: Capture; // keys represent either date taken with url, or a given name
     };
@@ -46,13 +51,14 @@ declare global {
     date_created: string;
     last_edited: string;
     schema_id: SchemaId;
-    project_id: string
+    project_id: ProjectId
     name: string;
     capture_body: {
       [key: string]: SchemaEntry; // Key represents the corresponding key in schema
     };
   };
   type SchemaId = string;
+  type ProjectId = string;
 
   // Options
   type SearchOptions = {
@@ -76,7 +82,7 @@ declare global {
   /**
    * Responses
    */
-  type DatabaseResponseOptions = {
+  type BackendResponseOptions = {
     data: {
       type: "project" | "capture" | "schema";
       method: "create" | "update" | "read" | "delete";
@@ -90,17 +96,17 @@ declare global {
     // Add more operations as needed...
   };
 
-  type DatabaseResponse =
-    | { operation: "database"; data: DatabaseResponseOptions["data"] }
+  type BackendResponse =
+    | { operation: "database"; data: BackendResponseOptions["data"] }
     | {
         operation: "otherOperation";
-        data: DatabaseResponseOptions["otherOperation"];
+        data: BackendResponseOptions["otherOperation"];
       };
 
   /**
    * Messages
    */
-  type DataBaseMessageOptions = {
+  type BackendMessageOptions = {
     data: CRUDDataOptions
     otherOperation: {
       otherField: string;
@@ -108,11 +114,11 @@ declare global {
     };
   };
 
-  type DatabaseMessage =
-    | { operation: "database"; data: DataBaseMessageOptions["data"] }
+  type BackendMessage =
+    | { operation: "database"; data: BackendMessageOptions["data"] }
     | {
         operation: "otherOperation";
-        data: DataBaseMessageOptions["otherOperation"];
+        data: BackendMessageOptions["otherOperation"];
       };
 }
 

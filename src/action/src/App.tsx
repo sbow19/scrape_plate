@@ -5,8 +5,7 @@ import { useEffect, useState } from "react";
 /* CUSTOM COMPONENT */
 
 /* CUSTOM UTILS */
-import UserContent from "./state/state"
-
+import UserContent from "../../shared/src/state/state";
 
 function App() {
   // IMPLEMENT: Run initialisation logic here
@@ -14,6 +13,8 @@ function App() {
   const [appLoaded, setIsAppLoaded] = useState(false);
   
   useEffect(()=>{
+
+    console.log(UserContent)
 
     if(!appLoaded){
       UserContent.init()
@@ -23,6 +24,7 @@ function App() {
         .then((result: UserContentModel)=>{
 
           // Has user  used app before
+          console.log(result)
           
 
         })

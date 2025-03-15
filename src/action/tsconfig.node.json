@@ -22,5 +22,5 @@
 
 
   },
-  "include": ["vite.config.ts", "../types/*"]
+  "include": ["vite.config.ts", "../types/*", "../shared/**/*"]
 }
