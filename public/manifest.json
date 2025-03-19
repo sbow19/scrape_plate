@@ -12,5 +12,8 @@
     "commands": {
     },
     "permissions": [
+        "tabs",
+        "sidePanel",
+        "contextMenus"
     ]
 }

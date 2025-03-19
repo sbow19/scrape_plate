@@ -5,16 +5,14 @@
  */
 
 import { testUserContentModelData } from "../tests/mock_data";
-import {
-  messageFactory,
-  validateCRUDOptions,
-} from "../utils/helpers";
+import { messageFactory, validateCRUDOptions } from "../utils/helpers";
 import { EventEmitter } from "./events";
 
 class UserContent {
   // Contains the user content in one js object, which is indirectly
   // accessible from hooks. IMPLEMENT: Content Model Type
   private static _userContentModel: UserContentModel;
+  private static _schemaMatches: Schema[];
   private static _eventEmitter: EventEmitter = new EventEmitter();
 
   private static _testData: UserContentModel = testUserContentModelData;
@@ -33,6 +31,11 @@ class UserContent {
       UserContent._returnUserContent
     );
     UserContent._eventEmitter.subscribe("getAllOf", UserContent._returnAllOf);
+
+    UserContent._eventEmitter.subscribe(
+      "getMatchingSchemas",
+      UserContent._returnMatchingSchemas
+    );
 
     // Searches
     UserContent._eventEmitter.subscribe("search", UserContent._returnSearch);
@@ -63,7 +66,28 @@ class UserContent {
     return new Promise((resolve, reject) => {
       // IMPLEMENT:  attempt to fetch content from IndexedDB
       try {
-        resolve(UserContent._userContentModel);
+        const options: CRUDDataOptions = {
+          method: "read",
+          type: "all",
+        };
+
+        const backendMessage = messageFactory("database", options);
+        chrome.runtime
+          .sendMessage(backendMessage)
+          .then((backendResponse: BackendResponse) => {
+            if (backendResponse.operation !== "database")
+              reject(backendResponse);
+
+            if (!backendResponse.data.success) reject(backendResponse);
+
+            // IMPLEMENT: validate user content model
+            UserContent._userContentModel = backendResponse.data.payload;
+
+            resolve(UserContent._userContentModel);
+          })
+          .catch((e) => {
+            reject(e);
+          });
       } catch {
         reject({});
       }
@@ -76,6 +100,41 @@ class UserContent {
    */
   private static _returnUserContent(): UserContentModel {
     return UserContent._userContentModel;
+  }
+
+  /**
+   *
+   * @returns
+   */
+  private static _returnMatchingSchemas(): Promise<Schema[]> {
+    return new Promise((resolve, reject) => {
+      try {
+        const options: CRUDDataOptions = {
+          method: "read",
+          type: "schemaMatches",
+        };
+
+        const backendMessage = messageFactory("database", options);
+        chrome.runtime
+          .sendMessage(backendMessage)
+          .then((backendResponse: BackendResponse) => {
+            if (backendResponse.operation !== "database")
+              reject(backendResponse);
+
+            if (!backendResponse.data.success) reject(backendResponse);
+
+            // IMPLEMENT: validate user content model
+            UserContent._schemaMatches = backendResponse.data.payload;
+
+            resolve(UserContent._schemaMatches);
+          })
+          .catch((e) => {
+            reject(e);
+          });
+      } catch {
+        reject({});
+      }
+    });
   }
 
   /**
@@ -338,7 +397,7 @@ class UserContent {
   static get events() {
     return UserContent._eventEmitter;
   }
-  
+
   private static _setTestData() {
     UserContent._userContentModel = JSON.parse(
       JSON.stringify(UserContent._testData)

@@ -21,8 +21,32 @@ export const testUserContentModelData: UserContentModel = {
             schema_id: "s11aa111-11aa-1111-a111-1a11a1a1a111",
             name: "capture1",
             capture_body: {
-              id1: "hello",
-              id2: "world",
+              location: {
+                key: {
+                 match_expression: "id1",
+                  match_type: "id",
+                  matched_value: "location"
+                },
+                value: {
+                 match_expression: "id2",
+                  match_type: "id",
+                  matched_value: "Hamburg"
+                }
+               
+              },
+              age: {
+                key: {
+                 match_expression: null,
+                  match_type: "manual", 
+                  matched_value: "age"
+                }, 
+                value: {
+                 match_expression: "id4",
+                  match_type: "id", 
+                  matched_value: "22"
+                }
+                
+              },
             },
           },
           "c11aa111-11aa-1111-a111-1a11a1a1a112": {
@@ -33,8 +57,30 @@ export const testUserContentModelData: UserContentModel = {
             project_id: "a11aa111-11aa-1111-a111-1a11a1a1a111",
             name: "capture2",
             capture_body: {
-              id3: "go",
-              id4: "is great",
+              id: {
+                key:{
+                 match_expression: null, 
+                  match_type: "manual",
+                  matched_value: "id"
+                },
+                value: {
+                 match_expression: "id2",
+                  match_type: "id",
+                  matched_value: "Go"
+                }
+              },
+              name: {
+                key:{
+                 match_expression: "id3", 
+                  match_type: "id",
+                  matched_value: "name"
+                },
+                value: {
+                 match_expression: "id4",
+                  match_type: "id",
+                  matched_value: "Is great"
+                }
+              },
             },
           },
         },
@@ -53,8 +99,32 @@ export const testUserContentModelData: UserContentModel = {
             schema_id: "s11aa111-11aa-1111-a111-1a11a1a1a111",
             name: "capture1",
             capture_body: {
-              id1: "hello",
-              id2: "world",
+              location: {
+                key: {
+                 match_expression: "id1",
+                  match_type: "id",
+                  matched_value: "location"
+                },
+                value: {
+                 match_expression: "id2",
+                  match_type: "id",
+                  matched_value: "United Kingdom"
+                }
+               
+              },
+              age: {
+                key: {
+                 match_expression: null,
+                  match_type: "manual", 
+                  matched_value: "age"
+                }, 
+                value: {
+                 match_expression: "id4",
+                  match_type: "id", 
+                  matched_value: "74"
+                }
+                
+              },
             },
           },
           "c11aa111-11aa-1111-a111-1a11a1a1a114": {
@@ -65,8 +135,30 @@ export const testUserContentModelData: UserContentModel = {
             schema_id: "s11aa111-11aa-1111-a111-1a11a1a1a112",
             name: "capture2",
             capture_body: {
-              id3: "go",
-              id4: "is great",
+              id: {
+                key:{
+                 match_expression: null, 
+                  match_type: "manual",
+                  matched_value: "id"
+                },
+                value: {
+                 match_expression: "id2",
+                  match_type: "id",
+                  matched_value: "123456789"
+                }
+              },
+              name: {
+                key:{
+                 match_expression: "id3", 
+                  match_type: "id",
+                  matched_value: "name"
+                },
+                value: {
+                 match_expression: "id4",
+                  match_type: "id",
+                  matched_value: "Nicholas Watsowky"
+                }
+              },
             },
           },
         },
@@ -78,13 +170,29 @@ export const testUserContentModelData: UserContentModel = {
         name: "schema2",
         url_match: "https://www.google.com",
         schema: {
-          id3: {
-            match: "id3",
-            match_type: "id",
+          id: {
+            key:{
+             match_expression: null, 
+              match_type: "manual",
+              matched_value: "id"
+            },
+            value: {
+             match_expression: "id2",
+              match_type: "id",
+              matched_value: null
+            }
           },
-          id4: {
-            match: "id4",
-            match_type: "id",
+          name: {
+            key:{
+             match_expression: "id3", 
+              match_type: "id",
+              matched_value: "name"
+            },
+            value: {
+             match_expression: "id4",
+              match_type: "id",
+              matched_value: null
+            }
           },
         },
       },
@@ -93,13 +201,31 @@ export const testUserContentModelData: UserContentModel = {
         name: "schema1",
         url_match: "https://www.amazon.com",
         schema: {
-          id1: {
-            match: "id1",
-            match_type: "id",
+          location: {
+            key: {
+             match_expression: "id1",
+              match_type: "id",
+              matched_value: "location"
+            },
+            value: {
+             match_expression: "id2",
+              match_type: "id",
+              matched_value: null
+            }
+           
           },
-          id2: {
-            match: "id2",
-            match_type: "id",
+          age: {
+            key: {
+             match_expression: null,
+              match_type: "manual", 
+              matched_value: "age"
+            }, 
+            value: {
+             match_expression: "id4",
+              match_type: "id", 
+              matched_value: null
+            }
+            
           },
         },
       },

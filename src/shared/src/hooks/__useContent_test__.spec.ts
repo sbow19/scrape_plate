@@ -348,24 +348,39 @@ describe("useContent hook - create records", () => {
     const testSchemaData: Schema = {
       name: "newSchema",
       id: crypto.randomUUID(),
-      schema: {
-        id1: {
-          match: null,
-          match_type: "id",
-        },
-        ".class.hello": {
-          match: null,
-          match_type: "css selector",
-        },
-        "^.tsx": {
-          match: null,
-          match_type: "regex",
-        },
-      },
       url_match: "https://",
+      schema: {
+        name: {
+          key:{
+            match_expression: "name_tag",
+            match_type: "id",
+            matched_value: "name"
+          },
+          value: {
+            match_expression: "name_id",
+            match_type: "id",
+            matched_value: null
+          }
+        },
+        age: {
+          key: {
+
+            match_expression: null,
+            match_type: "manual",
+            matched_value: "age"
+
+          },
+          value: {
+            match_expression: "age_id",
+            match_type: "id",
+            matched_value: null
+          }
+        }
+      },
+      
     };
 
-    const mockResponse: DatabaseResponse = {
+    const mockResponse: BackendResponse = {
       operation: "database",
       data: {
         type: "schema",
@@ -417,7 +432,7 @@ describe("useContent hook - create records", () => {
       captures: {},
     };
 
-    const mockResponse: DatabaseResponse = {
+    const mockResponse: BackendResponse = {
       operation: "database",
       data: {
         type: "project",
@@ -458,7 +473,7 @@ describe("useContent hook - create records", () => {
       captures: {},
     };
 
-    const mockResponse: DatabaseResponse = {
+    const mockResponse: BackendResponse = {
       operation: "database",
       data: {
         type: "project",
@@ -496,23 +511,37 @@ describe("useContent hook - create records", () => {
       name: "newSchema",
       id: crypto.randomUUID(),
       schema: {
-        id1: {
-          match: null,
-          match_type: "id",
+        name: {
+          key:{
+            match_expression: "name_tag",
+            match_type: "id",
+            matched_value: "name"
+          },
+          value: {
+            match_expression: "name_id",
+            match_type: "id",
+            matched_value: null
+          }
         },
-        ".class.hello": {
-          match: null,
-          match_type: "css selector",
-        },
-        "^.tsx": {
-          match: null,
-          match_type: "regex",
-        },
+        age: {
+          key: {
+
+            match_expression: null,
+            match_type: "manual",
+            matched_value: "age"
+
+          },
+          value: {
+            match_expression: "age_id",
+            match_type: "id",
+            matched_value: null
+          }
+        }
       },
       url_match: "https://",
     };
 
-    const mockResponse: DatabaseResponse = {
+    const mockResponse: BackendResponse = {
       operation: "database",
       data: {
         type: "schema",
@@ -569,16 +598,27 @@ describe("useContent hook - create records", () => {
     });
   });
 
-  it("Should throw an error for invalid key length in schema", async () => {
+
+  
+
+  it("Should throw an error for invalid matched_value length in schema key", async () => {
     //Set up
     const testSchemaData: Schema = {
       name: "newSchema",
       id: crypto.randomUUID(),
       schema: {
-        "id1uifwiuhwefw wfohwfeiuhwefwefw cwefwrerge": {
-          match: null,
-          match_type: "id",
-        },
+        locationfiuhiuwhefiwhiuwhefihuwiefhiuwefwe: {
+          key: {
+           match_expression: "id1",
+            match_type: "id",
+            matched_value: "locationfiuhiuwhefiwhiuwhefihuwiefhiuwefwe"
+          },
+          value: {
+           match_expression: "id2",
+            match_type: "id",
+            matched_value: null
+          }
+        }
       },
       url_match: "https://",
     };
@@ -597,35 +637,51 @@ describe("useContent hook - create records", () => {
         expect(true).toBe(false);
       } catch (e) {
         expect(e).toEqual(
-          Error("Schema entry selector must be less than 13 characters")
+          Error("Schema key name invalid - must be a string of 20 characters or less")
         );
       }
     });
   });
 
+
+
   it("Should not create a copy of new project in local store when duplicated name found", async () => {
     //Set up
     const testSchemaData: Schema = {
-      name: "newSchema",
+      name: "schema1",
       id: crypto.randomUUID(),
       schema: {
-        id1: {
-          match: null,
-          match_type: "id",
+        name: {
+          key:{
+            match_expression: "name_tag",
+            match_type: "id",
+            matched_value: "name"
+          },
+          value: {
+            match_expression: "name_id",
+            match_type: "id",
+            matched_value: null
+          }
         },
-        ".class.hello": {
-          match: null,
-          match_type: "css selector",
-        },
-        "^.tsx": {
-          match: null,
-          match_type: "regex",
-        },
+        age: {
+          key: {
+
+            match_expression: null,
+            match_type: "manual",
+            matched_value: "age"
+
+          },
+          value: {
+            match_expression: "age_id",
+            match_type: "id",
+            matched_value: null
+          }
+        }
       },
       url_match: "https://",
     };
 
-    const mockResponse: DatabaseResponse = {
+    const mockResponse: BackendResponse = {
       operation: "database",
       data: {
         type: "schema",
@@ -669,7 +725,7 @@ describe("useContent hook - create records", () => {
       last_edited: dummyDate.toISOString(),
     };
 
-    const mockResponse: DatabaseResponse = {
+    const mockResponse: BackendResponse = {
       operation: "database",
       data: {
         type: "capture",
@@ -743,7 +799,7 @@ describe("useContent hook - create records", () => {
       last_edited: "",
     };
 
-    const mockResponse: DatabaseResponse = {
+    const mockResponse: BackendResponse = {
       operation: "database",
       data: {
         type: "capture",
@@ -754,7 +810,7 @@ describe("useContent hook - create records", () => {
     chrome.runtime.sendMessage.mockResolvedValue(mockResponse);
     // Call hook - should update internal model when receives success response from sendMessage
     const { result } = renderHook(() => useContent());
-    const responseMessage = await act(async () => {
+    await act(async () => {
       const options: CRUDDataOptions = {
         type: "capture",
         data: testCaptureData,
@@ -779,7 +835,7 @@ describe("useContent hook - create records", () => {
       last_edited: "",
     };
 
-    const mockResponse: DatabaseResponse = {
+    const mockResponse: BackendResponse = {
       operation: "database",
       data: {
         type: "capture",
@@ -790,7 +846,7 @@ describe("useContent hook - create records", () => {
     chrome.runtime.sendMessage.mockResolvedValue(mockResponse);
     // Call hook - should update internal model when receives success response from sendMessage
     const { result } = renderHook(() => useContent());
-    const responseMessage = await act(async () => {
+    await act(async () => {
       const options: CRUDDataOptions = {
         type: "capture",
         data: testCaptureData,
@@ -815,10 +871,18 @@ describe("useContent hook - create records", () => {
       schema_id: "s11aa111-11aa-1111-a111-1a11a1a1a111",
       project_id: "a11aa111-11aa-1111-a111-1a11a1a1a112",
       capture_body: {
-        ".class.hello": {
-          match: "feurfheiuvbiruwbrivubrivubviuebrviebvieurvbeuirv",
-          match_type: "css selector",
-        },
+        location: {
+          key: {
+           match_expression: "id1",
+            match_type: "id",
+            matched_value: "location"
+          },
+          value: {
+           match_expression: "id2",
+            match_type: "id",
+            matched_value: "fhwirhowihowihofiwhoifhwofihoiheoifwhoeiwhfwe"
+          }
+        }
       },
       date_created: "",
       last_edited: "",
@@ -838,7 +902,7 @@ describe("useContent hook - create records", () => {
         expect(true).toBe(false);
       } catch (e) {
         expect(e).toEqual(
-          Error("Capture matched content must be less than 20 characters")
+          Error("Schema value invalid - must be a string of 20 characters or less")
         );
       }
     });
@@ -850,7 +914,7 @@ describe("useContent hook - delete records", () => {
     //Set up
     const project2 = "a11aa111-11aa-1111-a111-1a11a1a1a112";
 
-    const mockResponse: DatabaseResponse = {
+    const mockResponse: BackendResponse = {
       operation: "database",
       data: {
         type: "project",
@@ -883,7 +947,7 @@ describe("useContent hook - delete records", () => {
     //Set up
     const schema2 = "s11aa111-11aa-1111-a111-1a11a1a1a112";
 
-    const mockResponse: DatabaseResponse = {
+    const mockResponse: BackendResponse = {
       operation: "database",
       data: {
         type: "schema",
@@ -919,7 +983,7 @@ describe("useContent hook - delete records", () => {
       id: "c11aa111-11aa-1111-a111-1a11a1a1a111"
     };
 
-    const mockResponse: DatabaseResponse = {
+    const mockResponse: BackendResponse = {
       operation: "database",
       data: {
         type: "capture",
@@ -963,7 +1027,7 @@ describe("useContent hook - update records", ()=>{
       captures: {},
     };
 
-    const mockResponse: DatabaseResponse = {
+    const mockResponse: BackendResponse = {
       operation: "database",
       data: {
         type: "project",
@@ -1011,7 +1075,7 @@ describe("useContent hook - update records", ()=>{
       captures: {},
     };
 
-    const mockResponse: DatabaseResponse = {
+    const mockResponse: BackendResponse = {
       operation: "database",
       data: {
         type: "project",

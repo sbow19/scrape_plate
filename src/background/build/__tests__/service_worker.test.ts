@@ -1,36 +1,68 @@
 // service-worker.test.js
-import '../service-worker';
+import "../service-worker";
+import IndexedDBOperations from "../../src/db/db";
+import { backendResponseFactory } from "../../src/utils/utils";
 
+describe("On Installed Scripts", () => {
+  test("Should call IndexedDB to set up new store", () => {
+    // Trigger on installed event listener
+    chrome.runtime.onInstalled.addListener.mock.calls[0][0]();
 
-describe('Service Worker Tests', () => {
-  beforeEach(() => {
-    // Clear any mocks before each test
-  });
+    // Get mocked onupgradeneeded function
+    const mockDatabaseRequest = indexedDBMocks.mockDatabaseRequest;
+    const dbMock = mockDatabaseRequest._result;
 
-  test('should respond to a test message', () => {
-    const sendResponse = jest.fn();
-    const message: BackendMessage = { operation: 'database', data: {
-      method: "create",
-      type: "project",
-      data: {}
-    } };
-    const sender = {}; // Simulate sender (if needed)
+    const spy = jest.spyOn(mockDatabaseRequest, "onupgradeneeded");
+    const getterSpy = jest.spyOn(mockDatabaseRequest, "result", "get");
+    const createStoreMock = jest.spyOn(dbMock, "createObjectStore");
 
-    // Call listener callback with the above message
-    chrome.runtime.onMessage.addListener.mock.calls[0][0](message, sender, sendResponse)
-
-    // Check if the service worker responded correctly
-    expect(sendResponse).not.toHaveBeenCalledWith();
-  });
-
-  test('should not respond to an unrecognized message', () => {
-    const sendResponse = jest.fn();
-    const message = { action: 'unknownAction' };
-    
-    // Simulate the message being sent to the service worker
-    chrome.runtime.onMessage.addListener(message, {}, sendResponse);
+    // Trigger onupgraded event - use mock IDBChangeEvent
+    mockDatabaseRequest.onupgradeneeded(null);
 
     // Ensure no response is sent for an unknown action
-    expect(sendResponse).not.toHaveBeenCalled();
+    expect(indexedDB.open).toHaveBeenCalledTimes(1);
+    expect(indexedDB.open).toHaveBeenCalledWith("scrape_plate");
+
+    // Check on upgrade needed callback fired properly
+    expect(spy).toHaveBeenCalledWith(null);
+    expect(getterSpy).toHaveBeenCalled();
+
+    // Check create object store as called three times
+    expect(createStoreMock).toHaveBeenCalledTimes(3);
+    expect(createStoreMock).toHaveBeenNthCalledWith(1, "details");
+    expect(createStoreMock).toHaveBeenNthCalledWith(2, "projects", {
+      keyPath: "id",
+    });
+    expect(createStoreMock).toHaveBeenNthCalledWith(3, "schemas", {
+      keyPath: "id",
+    });
   });
+
+  // test("Should return userContentModel on get all  CRUD operation request", () => {
+
+  //   // Mock data
+  //   const message: BackendMessage = {
+  //     operation: "database",
+  //     data: {
+  //       type: "all",
+  //       method: "read",
+  //     },
+  //   };
+  //   const sender = null;
+  //   const sendResponse = jest.fn();
+
+  //   // Spy on methods
+  //   const handleQuerySpy = jest.spyOn(IndexedDBOperations, "handleQuery");
+
+  //   // Trigger on installed event listener
+  //   chrome.runtime.onMessage.addListener.mock.calls[0][0](
+  //     message,
+  //     sender,
+  //     sendResponse
+  //   );
+
+  //   // Assertions
+  //   expect(handleQuerySpy).toHaveBeenCalledWith(message.data);
+  //   expect(handleQuerySpy).toHaveReturnedWith(Promise<DBOperationResult>);
+  // });
 });

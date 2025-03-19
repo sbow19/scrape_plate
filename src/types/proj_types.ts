@@ -1,19 +1,7 @@
 declare global {
   // User Content Tree Model
   type UserContentModel = {
-    details: {
-      // Has user used extension once before
-      hasUsedOnce: boolean;
-      // Last used - represents date time string
-      last_used: string;
-
-      username: string;
-
-      // Inform user of version updates
-      updateRequired: boolean;
-
-      currentProject: ProjectId
-    };
+    details: UserContentDetails;
     projects: {
       [key: string]: ProjectGroup; // Keys represent the name or the project group
     };
@@ -22,19 +10,43 @@ declare global {
     };
   };
 
+  type UserContentDetails = {
+    // Has user used extension once before
+    hasUsedOnce: boolean;
+    // Last used - represents date time string
+    last_used: string;
+
+    username: string;
+
+    // Inform user of version updates
+    updateRequired: boolean;
+
+    currentProject: ProjectId | null;
+  }
+
   type Schema = {
     id: SchemaId;
     name: string | null;
     url_match: string; // Schemas must match a specific url pattern
     schema: {
-      [key: string]: SchemaEntry; // Key must represent a RegExp match, css selector or id
+      [key: string]: SchemaEntry; // Key must be name of the key
     };
   };
 
   type SchemaEntry = {
-    match: string | null;
-    match_type: "id" | "css selector" | "regex";
+    key: {
+      match_expression: string | null; // Represents match term
+      match_type: MatchMethod; // Represents the methods for determining the key value, which can be done manually
+      matched_value: string | null; // Represents the actual scraped value
+    };
+    value: {
+      match_expression: string | null;
+      match_type: "id" | "css selector" | "regex";
+      matched_value: string | null; // Represents the actual scraped value
+    };
   };
+
+  type MatchMethod = "id" | "css selector" | "regex" | "manual";
 
   type ProjectGroup = {
     name: string;
@@ -51,10 +63,10 @@ declare global {
     date_created: string;
     last_edited: string;
     schema_id: SchemaId;
-    project_id: ProjectId
+    project_id: ProjectId;
     name: string;
     capture_body: {
-      [key: string]: SchemaEntry; // Key represents the corresponding key in schema
+      [key: string]: SchemaEntry; // Key represents the key value of the entry
     };
   };
   type SchemaId = string;
@@ -67,15 +79,21 @@ declare global {
   };
 
   type CRUDDataOptions =
-    | { method: "create" | "update" ; type: "capture"; data: Capture }
-    | { method: "create" | "update" ; type: "project"; data: ProjectGroup }
-    | { method: "create" | "update" ; type: "schema"; data: Schema }
-    | { method: "delete" ; type: "schema" | "project"; data: string}
-    | { method: "delete" ; type: "capture"; data: {
-      project_id: string
-      id: string
-    }}
-    
+    | { method: "read"; type: "all" | "schema" | "schemaMatches"}
+    | { method: "update"; type: "schemaMatches"; data: Schema[]}
+    | { method: "create" | "update"; type: "capture"; data: Capture }
+    | { method: "create" | "update"; type: "project"; data: ProjectGroup }
+    | { method: "create" | "update"; type: "schema"; data: Schema }
+    | { method: "delete"; type: "schema" | "project"; data: SchemaId | ProjectId }
+    | {
+        method: "delete";
+        type: "capture";
+        data: {
+          project_id: ProjectId;
+          id: string;
+        };
+      }
+    | { method: "update"; type: "details"; data: UserContentDetails };
 
   // Define conditional data structures for different operations
 
@@ -84,30 +102,41 @@ declare global {
    */
   type BackendResponseOptions = {
     data: {
-      type: "project" | "capture" | "schema";
-      method: "create" | "update" | "read" | "delete";
+      type: DBOperationDataType;
+      method: DBOperations;
       success: boolean;
-      message?: string
+      message: DBErrorMessage | string | null;
+      payload: any; // Represents content if requested
     };
-    otherOperation: {
-      otherField: string;
-      success: boolean;
-    };
-    // Add more operations as needed...
+
+    /**
+     * Specify the page to display -- view/edit, create schema, capture
+     */
+    openSidePanel: {
+      method: "view_edit" | "create_schema" | "capture_body",
+      schema: Schema  | Array<Schema>   // Matching schema or schemas
+    }
   };
 
   type BackendResponse =
-    | { operation: "database"; data: BackendResponseOptions["data"] }
+    | { 
+        operation: "database"; 
+        data: BackendResponseOptions["data"] 
+      }
     | {
-        operation: "otherOperation";
-        data: BackendResponseOptions["otherOperation"];
+        operation: "openSidePanel";
+        data: BackendResponseOptions["openSidePanel"];
       };
 
   /**
    * Messages
    */
   type BackendMessageOptions = {
-    data: CRUDDataOptions
+    data: CRUDDataOptions;
+    openSidePanel: {
+      method: "view_edit" | "create_schema" | "capture_body",
+      schema: Schema | Schema[]
+    }
     otherOperation: {
       otherField: string;
       success: boolean;
@@ -117,9 +146,61 @@ declare global {
   type BackendMessage =
     | { operation: "database"; data: BackendMessageOptions["data"] }
     | {
+      operation: "openSidePanel";
+      data: BackendMessageOptions["openSidePanel"]
+    }
+    | {
         operation: "otherOperation";
         data: BackendMessageOptions["otherOperation"];
       };
+
+  /**
+   * INTERNAL  DATABASE OPERATIONS
+   */
+  type DBOperationResult = {
+    success: boolean;
+    method: DBOperations;
+    type: DBOperationDataType;
+    message: DBErrorMessage | null;
+    data?: UserContentModel | {
+      [key: string]: Schema
+    };
+  };
+
+  type DBOperations = "read" | "update" | "delete" | "create";
+  type DBOperationDataType =
+    | "details"
+    | "schema"
+    | "project"
+    | "capture"
+    | "all"
+    | "other"
+    | "schemaMatches"
+
+  type DBErrorMessage =
+    | "Invalid data type"
+    | "Object stores could not be fetched"
+    | "Delete project request failed"
+    | "Delete schema request failed"
+    | "Get operation on projects store failed"
+    | "Capture id does not exist"
+    | "Create project request failed"
+    | "Create schema request failed"
+    | "Capture id already exists" 
+    | "Invalid DB method"
+
+
+    // DOM Exceptions
+    | DOMException
+    | "InvalidStateError"
+    | "TransactionInactiveError"
+  
+    /**
+     * Misc Types
+     */
+    type SchemaMatches = {
+      schemaMatches: Schema[]
+    }
 }
 
 export {};

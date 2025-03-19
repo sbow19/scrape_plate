@@ -107,15 +107,10 @@ export function validateData(
                 throw new TypeError("Capture id not a string");
               break;
             case "capture_body":
-              if (typeof value !== "object")
-                throw new TypeError("captures not an object");
-
-              Object.values(value).forEach((captureBody: SchemaEntry) => {
-                if (captureBody.match?.length ?? 0 > 20)
-                  throw new Error(
-                    "Capture matched content must be less than 20 characters"
-                  );
+              Object.values(value).forEach((entry: SchemaEntry) => {
+                validateSchemaEntry(entry);
               });
+
               break;
             case "schema_id": {
               if (typeof value !== "string")
@@ -178,15 +173,9 @@ export function validateData(
                 throw new TypeError("Schema id not a string");
               break;
             case "schema":
-              if (typeof value !== "object")
-                throw new TypeError("Schema not an object");
-
-              // Schema entry selector must be less than 12 characters
-              Object.keys(value).forEach((schemaKey) => {
-                if (schemaKey.length > 12)
-                  throw new Error(
-                    "Schema entry selector must be less than 13 characters"
-                  );
+              // Throws error if  fails to validate
+              Object.values(value).forEach((entry: SchemaEntry) => {
+                validateSchemaEntry(entry);
               });
               break;
             case "url_match":
@@ -197,6 +186,71 @@ export function validateData(
         }
       }
       break;
+  }
+}
+
+/**
+ * Validates schema entries and capture entries/bodies
+ * @param entryToValidate
+ */
+export function validateSchemaEntry(entryToValidate: SchemaEntry) {
+  // Match types
+  const matched_types = ["id", "css selector", "manual", "regex "];
+  const valid_value_types = ["string", 'object'];
+
+  if (typeof entryToValidate !== "object")
+    throw new TypeError("Schema not an object");
+
+  const { key, value } = entryToValidate;
+  // Validate schema key value and value match value
+  if (
+    (key.matched_value?.length ?? 0) > 20 ||
+    !valid_value_types.includes(typeof key.matched_value)
+  ) {
+    throw new Error(
+      "Schema key name invalid - must be a string of 20 characters or less"
+    );
+  }
+
+  if (
+    (value.matched_value?.length ?? 0) > 20 ||
+    !valid_value_types.includes(typeof value.matched_value)
+  ) {
+    throw new Error(
+      "Schema value invalid - must be a string of 20 characters or less"
+    );
+  }
+
+  // Validate the match types
+  if (!matched_types.includes(key.match_type)) {
+    throw new Error(
+      "Schema key match type invalid - must be regex, id, or css selector"
+    );
+  }
+
+  if (!matched_types.includes(value.match_type)) {
+    throw new Error(
+      "Schema value match type invalid - must be regex, id, or css selector"
+    );
+  }
+
+  // Validate the match expression
+  if (
+    (key.match_expression?.length ?? 0) > 20 ||
+    !valid_value_types.includes(typeof key.match_expression)
+  ) {
+    throw new Error(
+      "Schema key match expression invalid - must be a string of 20 characters or less"
+    );
+  }
+
+  if (
+    (value.match_expression?.length ?? 0) > 20 ||
+    !valid_value_types.includes(typeof value.match_expression)
+  ) {
+    throw new Error(
+      "Schema value match expression invalid - must be a string of 20 characters or less"
+    );
   }
 }
 
@@ -233,10 +287,12 @@ export function validateCRUDOptions(options: CRUDDataOptions): void {
 // HELPERS - REFACTOR - MOVE INTO SEPARATE MODULE WITH OTHER  VALIDATION FUNCTIONS
 export function messageFactory(
   operation: string,
-  messageData: CRUDDataOptions
+  messageData?: CRUDDataOptions
 ): BackendMessage {
   switch (operation) {
     case "database":
+
+    if(!messageData) throw new Error("CRUD OPtions data required for db operation")
       return {
         operation: operation,
         data: messageData,
