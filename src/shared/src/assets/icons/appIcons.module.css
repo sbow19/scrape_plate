@@ -1,0 +1,38 @@
+.icon_button {
+    border: none;
+    pointer-events: auto;
+    transition: transform 0.1s ease-in;
+    background-color: transparent;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+
+    position: relative;
+    overflow: hidden;
+    z-index: 10;
+    border-radius: 50%;
+
+}
+
+.icon_button:hover {
+    transform: scale(1.2)
+
+}
+
+.icon_button::after {
+    content: '';
+    height: 100px;
+    width:200px;
+    background-color: white;
+    position: absolute;
+    z-index: -1;
+    right: 120px;
+    transition: right 0.5s ease; /* Smooth transition for the sliding effect */
+
+}
+
+.animated_row::after {
+    right: -50px
+}
+
+

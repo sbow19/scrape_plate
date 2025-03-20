@@ -77,6 +77,7 @@ export function validateData(
           "id",
           "capture_body",
           "schema_id",
+          "url_match",
         ];
         for (const key of Object.keys(data)) {
           if (!captureKeys.includes(key))
@@ -105,6 +106,10 @@ export function validateData(
             case "id":
               if (typeof value !== "string")
                 throw new TypeError("Capture id not a string");
+              break;
+            case "url_match":
+              if (typeof value !== "string")
+                throw new TypeError("Capture url match not a string");
               break;
             case "capture_body":
               Object.values(value).forEach((entry: SchemaEntry) => {
@@ -196,7 +201,7 @@ export function validateData(
 export function validateSchemaEntry(entryToValidate: SchemaEntry) {
   // Match types
   const matched_types = ["id", "css selector", "manual", "regex "];
-  const valid_value_types = ["string", 'object'];
+  const valid_value_types = ["string", "object"];
 
   if (typeof entryToValidate !== "object")
     throw new TypeError("Schema not an object");
@@ -291,8 +296,8 @@ export function messageFactory(
 ): BackendMessage {
   switch (operation) {
     case "database":
-
-    if(!messageData) throw new Error("CRUD OPtions data required for db operation")
+      if (!messageData)
+        throw new Error("CRUD OPtions data required for db operation");
       return {
         operation: operation,
         data: messageData,
@@ -308,4 +313,93 @@ export function messageFactory(
     default:
       throw new TypeError("Message operation type incorrect - e.g. database");
   }
+}
+
+// UI HELPERS
+
+/**
+ *
+ */
+export function tableDataConverter(
+  type: "projectList",
+  data: ProjectGroup[]
+): TableData | null ;
+export function tableDataConverter(type: "project", data: ProjectGroup): TableData | null ;
+export function tableDataConverter(type: "captureList", data: Capture[]): TableData | null ;
+export function tableDataConverter(type: "capture", data: Capture): TableData | null ;
+export function tableDataConverter(type: "schemaList", data: Schema[]): TableData | null ;
+export function tableDataConverter(type: "schema", data: SchemaEntry[]): TableData | null ;
+export function tableDataConverter(
+  type: "schemaMatchList",
+  data: Schema | Schema[]
+): TableData | null ;
+
+export function tableDataConverter(
+  type: TableDataTypeOptions,
+  data: any
+): TableData | null {
+  switch (type) {
+    case "captureList": {
+      return {
+        header: ["name", "url", "date captured"],
+        data: data.map((capture: Capture) => {
+          return [capture.name, capture.url_match, convertISOToDate(capture.date_created)];
+        }),
+      };
+    }
+    case "capture":
+      return {
+        header: ["key", "value"],
+        data: data.map((capture: SchemaEntry) => {
+          return [capture.key.matched_value, capture.value.matched_value];
+        }),
+      };
+    case "projectList":
+      return {
+        header: ["name", "date created", "last edited"],
+        data: data.map((project: ProjectGroup) => {
+          return [project.name, convertISOToDate(project.date_created), convertISOToDate(project.last_edited)];
+        }),
+      };
+    case "schemaMatchList":
+      return {
+        header: ["name", "url match"],
+        data: data.map((schema: Schema) => {
+          return [schema.name, schema.url_match];
+        }),
+      };
+    case "schemaList":
+      return {
+        header: ["name", "url_match"],
+        data: data.map((schema: Schema) => {
+          return [schema.name, schema.url_match];
+        }),
+      };
+    /**
+     *
+     */
+    case "schema":
+      return {
+        header: ["key", "type", "value", "type"],
+        data: data.map((schema: SchemaEntry) => {
+          return [
+            schema.key?.match_type === "manual"
+              ? schema.key.matched_value
+              : schema.key.match_expression,
+            schema.key.match_type,
+            schema.value.match_expression,
+            schema.value.match_type,
+          ];
+        }),
+      };
+
+    default:
+      return null
+
+  }
+}
+
+export function convertISOToDate(date: string):string {
+  const newDate = new Date(date)
+  return `${newDate.getDay()} ${newDate.getMonth() + 1} ${newDate.getFullYear()}`
 }

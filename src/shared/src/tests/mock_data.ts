@@ -15,6 +15,7 @@ export const testUserContentModelData: UserContentModel = {
         captures: {
           "c11aa111-11aa-1111-a111-1a11a1a1a111": {
             id: "c11aa111-11aa-1111-a111-1a11a1a1a111",
+            url_match: "https://",
             date_created: "2025-01-11T14:30:00",
             last_edited: "2025-01-12T14:30:00",
             project_id: "a11aa111-11aa-1111-a111-1a11a1a1a111",
@@ -56,6 +57,7 @@ export const testUserContentModelData: UserContentModel = {
             schema_id: "s11aa111-11aa-1111-a111-1a11a1a1a112",
             project_id: "a11aa111-11aa-1111-a111-1a11a1a1a111",
             name: "capture2",
+            url_match: "https://",
             capture_body: {
               id: {
                 key:{
@@ -97,6 +99,7 @@ export const testUserContentModelData: UserContentModel = {
             last_edited: "2025-01-12T14:30:00",
             project_id: "a11aa111-11aa-1111-a111-1a11a1a1a112",
             schema_id: "s11aa111-11aa-1111-a111-1a11a1a1a111",
+            url_match: "https://",
             name: "capture1",
             capture_body: {
               location: {
@@ -134,6 +137,7 @@ export const testUserContentModelData: UserContentModel = {
             project_id: "a11aa111-11aa-1111-a111-1a11a1a1a112",
             schema_id: "s11aa111-11aa-1111-a111-1a11a1a1a112",
             name: "capture2",
+            url_match: "https://",
             capture_body: {
               id: {
                 key:{

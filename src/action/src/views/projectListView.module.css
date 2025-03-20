@@ -1,0 +1,42 @@
+.button_container {
+    /*LAYOUT*/
+    height: 85%;
+    width:85%;
+    padding:5px 0;
+    display:flex;
+    align-items: center;
+    overflow: hidden;
+    border-radius: 10px;
+    background-color: var(--primary);
+    justify-content: space-around;
+}
+
+.project_info_container {
+    height: 50%;
+    width:100%;
+    align-items: center;
+    flex-direction: column;
+    display:flex;
+    justify-content: space-around;
+}
+
+.last_edited, .created_at, .project_name_container {
+    text-align: left;
+    width:50%
+}
+
+.project_name_container {
+    display: flex
+}
+
+.table_container {
+    height: 100%; /* or any height you want */
+    overflow-y: auto;
+    display: block;
+    width: 100%; 
+}
+
+.input_field {
+    background-color: var(--primary);
+    outline: none
+}

@@ -27,5 +27,5 @@
 
   
   },
-  "include": ["src",  "../types/*", "../shared/**/*"]
+  "include": ["src",  "../types/*", "../shared/**/*", "../global_styles/shared/**/*"]
 }

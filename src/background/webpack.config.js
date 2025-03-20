@@ -4,7 +4,7 @@ export default {
   entry: './src/main.ts', // Entry point for the service worker
   output: {
     filename: 'service-worker.js',  // Output bundled JavaScript file for the service worker
-    path: path.resolve(process.cwd(), './build'),
+    path: path.resolve(process.cwd(), '../../public/background'),
   },
   target: 'web',
   resolve: {
@@ -28,5 +28,5 @@ export default {
       },
     ],
   },
-  mode: 'development',  // Set to 'production' for a production build
+  mode: 'production',  // Set to 'production' for a production build
 };

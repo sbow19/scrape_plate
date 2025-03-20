@@ -1,0 +1,60 @@
+/* Global styes settings across application*/
+:root {
+  --primary: #acadbcff;
+  --secondary: #353535ff;
+  --white: #fcfcfc;
+  --green: #006400;
+  --red: #fb3640ff;
+  --orange: #f39237ff;
+}
+
+@font-face {
+  font-family: "OpenSans";
+  src: url("../assets/Open_Sans/OpenSans-VariableFont_wdth,wght.ttf")
+    format("truetype");
+  font-weight: normal;
+  font-size: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "OpenSans";
+  src: url("../assets/Open_Sans/OpenSans-Italic-VariableFont_wdth,wght.ttf")
+    format("truetype");
+  font-weight: normal;
+  font-size: normal;
+  font-style: italic;
+}
+
+* {
+  box-sizing: border-box;
+  border: none;
+  margin: 0;
+  padding: 0;
+  font-family: "OpenSans", Roboto, "Gill Sans", "Gill Sans MT", Calibri,
+    "Trebuchet MS", sans-serif;
+
+  color: var(--white);
+}
+
+::-webkit-scrollbar {
+  width: 10px; /* Vertical scrollbar width */
+  height: 10px; /* Horizontal scrollbar height */
+}
+
+::-webkit-scrollbar-track {
+  background-color:var(--white); /* Light background for the scrollbar track */
+  border-radius: 10px; /* Optional: rounded corners */
+}
+
+/* Handle (thumb) of the scrollbar */
+::-webkit-scrollbar-thumb {
+    background-color: var(--primary); /* Darker color for the thumb */
+    border-radius: 10px; /* Rounded corners */
+    border: 3px solid var(--white); /* Optional: adds border to thumb for better contrast */
+  }
+
+  /* Optional: Hover state for thumb */
+::-webkit-scrollbar-thumb:hover {
+    background-color: var(--secondary); /* Darker color when hovering */
+  }

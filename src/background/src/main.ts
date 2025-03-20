@@ -113,48 +113,12 @@ chrome.tabs.onActivated.addListener(() => {
         title: "View/edit schema",
         contexts: ["page"],
         id: "view_edit_schema",
-        onclick: (info, tab) => {
-          chrome.sidePanel.open(
-            {
-              tabId: currentTab.id,
-            },
-            () => {
-              // Callback should run to sned data for screen
-              const sidePanelMessage: BackendResponse = {
-                operation: "openSidePanel",
-                data: {
-                  method: "view_edit",
-                  schema: matchingSchemas,
-                },
-              };
-              chrome.runtime.sendMessage(sidePanelMessage);
-            }
-          );
-        },
       });
 
       chrome.contextMenus.create({
         title: "Capture page",
         contexts: ["page"],
         id: "capture_page",
-        onclick: (info, tab) => {
-          chrome.sidePanel.open(
-            {
-              tabId: currentTab.id,
-            },
-            () => {
-              // Callback should run to sned data for screen
-              const sidePanelMessage: BackendResponse = {
-                operation: "openSidePanel",
-                data: {
-                  method: "capture_body",
-                  schema: matchingSchemas,
-                },
-              };
-              chrome.runtime.sendMessage(sidePanelMessage);
-            }
-          );
-        },
       });
 
       // Save matching schemas in database
@@ -250,10 +214,14 @@ chrome.tabs.onActivated.addListener(() => {
     title: "Create schema",
     contexts: ["page"],
     id: "create_schema",
-    onclick: (info, tab) => {
-      // Open the side panel, then send a message to the extension
-      // to indicate the reason for opening the side panel
-      chrome.sidePanel
+  });
+});
+
+chrome.contextMenus.onClicked.addListener((clickData: chrome.contextMenus.OnClickData, tab: chrome.tabs.Tab) => {
+  switch (clickData.menuItemId) {
+    case "create_schema":
+      {
+        chrome.sidePanel
         .open(
           {
             tabId: tab.id,
@@ -268,17 +236,75 @@ chrome.tabs.onActivated.addListener(() => {
                   name: "",
                   id: "",
                   url_match: tab.url,
-                  schema: {}
+                  schema: {},
                 },
               },
             };
             chrome.runtime.sendMessage(sidePanelMessage);
           }
         )
-        .then(() => {})
-        .catch((error) => {});
-    },
-  });
+      }
+      break;
+    case "view_edit_schema":
+      {
+        IndexedDBOperations.handleQuery(
+          {
+            type: "schemaMatches",
+            method: "read"
+          }
+        ).then((dbResult)=>{
+
+          chrome.sidePanel.open(
+            {
+              tabId: tab.id,
+            },
+            () => {
+              // Callback should run to sned data for screen
+              const sidePanelMessage: BackendResponse = {
+                operation: "openSidePanel",
+                data: {
+                  method: "view_edit",
+                  schema: dbResult.data["schemaMatches"],
+                },
+              };
+              chrome.runtime.sendMessage(sidePanelMessage);
+            }
+          );
+
+        })
+      }
+      break;
+    case "capture_body":
+      {
+        IndexedDBOperations.handleQuery(
+          {
+            type: "schemaMatches",
+            method: "read"
+          }
+        ).then((dbResult)=>{
+
+          chrome.sidePanel.open(
+            {
+              tabId: tab.id,
+            },
+            () => {
+              // Callback should run to sned data for screen
+              const sidePanelMessage: BackendResponse = {
+                operation: "openSidePanel",
+                data: {
+                  method: "capture_body",
+                  schema: dbResult.data["schemaMatches"],
+                },
+              };
+              chrome.runtime.sendMessage(sidePanelMessage);
+            }
+          );
+
+        })
+        
+      }
+      break;
+  }
 });
 
 // SIDE PANEL TRIGGERS FROM POPUP
@@ -291,23 +317,22 @@ chrome.runtime.onMessage.addListener(
     if (message.operation === "openSidePanel") {
       // Open the side panel, then send a message to the extension
       // to indicate the reason for opening the side panel
-      chrome.sidePanel
-        .open(
-          {
-            tabId: tab.id,
-          },
-          () => {
-            // Callback should run to sned data for screen
-            const sidePanelMessage: BackendResponse = {
-              operation: "openSidePanel",
-              data: {
-                method: message.data.method,
-                schema: message.data.schema,
-              },
-            };
-            chrome.runtime.sendMessage(sidePanelMessage);
-          }
-        )
+      chrome.sidePanel.open(
+        {
+          tabId: tab.id,
+        },
+        () => {
+          // Callback should run to sned data for screen
+          const sidePanelMessage: BackendResponse = {
+            operation: "openSidePanel",
+            data: {
+              method: message.data.method,
+              schema: message.data.schema,
+            },
+          };
+          chrome.runtime.sendMessage(sidePanelMessage);
+        }
+      );
     }
   }
 );

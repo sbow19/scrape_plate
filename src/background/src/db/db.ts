@@ -311,7 +311,7 @@ class IndexedDBOperations {
             schemasRequest.onsuccess = (ev) => {
               const result = ev.target as IDBRequest;
               const schemasArray: Array<Schema> = result.result;
-              const schemaStore;
+              const schemaStore = {};
               for (let schema of schemasArray) {
                 schemaStore[schema.id] = schema;
               }
@@ -351,7 +351,7 @@ class IndexedDBOperations {
 
             const schemaRequest = schemasStore?.getAll();
 
-            schemaRequest?.onsuccess = (ev) => {
+            schemaRequest.onsuccess = (ev) => {
               const event = ev.target as IDBRequest;
 
               const schemaMatches = event.result[0];
@@ -899,7 +899,7 @@ class IndexedDBOperations {
             // 1 is the only key in this store
             const schemaRequest = schemasStore?.put(data, 1);
 
-            schemaRequest?.onsuccess = (ev) => {
+            schemaRequest.onsuccess = (ev) => {
               resolve(
                 IndexedDBOperations._DBOperationResultFactory(
                   true,

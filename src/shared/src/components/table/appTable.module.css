@@ -1,0 +1,55 @@
+table {
+  width: 100%; /* Table should span the full width */
+  border-collapse: collapse; /* For better styling control */
+}
+
+tbody {
+  display: block; /* Allow tbody to scroll */
+  overflow-y: auto; /* Enable vertical scrolling */
+  max-height: 150px; /* Set the max height for scrolling */
+  width: 100%;
+}
+
+thead,
+tbody tr {
+  display: table; /* Ensure the rows are displayed as table rows */
+  width: 100%;
+  table-layout: fixed; /* Helps ensure the columns have a consistent layout */
+
+  /*STYLE*/
+  font-size: 0.7rem;
+}
+
+tbody {
+  position: relative;
+  overflow-y: scroll;
+}
+
+td {
+  max-width: 40%;
+  overflow-x: auto;
+  text-align: center;
+  height: 50px;
+}
+
+.options_container {
+    display: flex;
+    min-width: 100%;
+    align-items: center;
+    /* height: 100%; */
+    justify-content: right;
+    padding-right: 10px;
+}
+
+.input_style {
+  outline: none;
+  background-color: var(--primary);
+  width: 75%;
+  padding-left: 0px
+}
+
+.inline {
+  display: flex;
+  justify-content: start;
+  align-items: center;
+}

@@ -22,7 +22,7 @@ declare global {
     updateRequired: boolean;
 
     currentProject: ProjectId | null;
-  }
+  };
 
   type Schema = {
     id: SchemaId;
@@ -64,6 +64,7 @@ declare global {
     last_edited: string;
     schema_id: SchemaId;
     project_id: ProjectId;
+    url_match: string;
     name: string;
     capture_body: {
       [key: string]: SchemaEntry; // Key represents the key value of the entry
@@ -79,12 +80,16 @@ declare global {
   };
 
   type CRUDDataOptions =
-    | { method: "read"; type: "all" | "schema" | "schemaMatches"}
-    | { method: "update"; type: "schemaMatches"; data: Schema[]}
+    | { method: "read"; type: "all" | "schema" | "schemaMatches" }
+    | { method: "update"; type: "schemaMatches"; data: Schema[] }
     | { method: "create" | "update"; type: "capture"; data: Capture }
     | { method: "create" | "update"; type: "project"; data: ProjectGroup }
     | { method: "create" | "update"; type: "schema"; data: Schema }
-    | { method: "delete"; type: "schema" | "project"; data: SchemaId | ProjectId }
+    | {
+        method: "delete";
+        type: "schema" | "project";
+        data: SchemaId | ProjectId;
+      }
     | {
         method: "delete";
         type: "capture";
@@ -113,15 +118,15 @@ declare global {
      * Specify the page to display -- view/edit, create schema, capture
      */
     openSidePanel: {
-      method: "view_edit" | "create_schema" | "capture_body",
-      schema: Schema  | Array<Schema>   // Matching schema or schemas
-    }
+      method: "view_edit" | "create_schema" | "capture_body";
+      schema: Schema | Array<Schema>; // Matching schema or schemas
+    };
   };
 
   type BackendResponse =
-    | { 
-        operation: "database"; 
-        data: BackendResponseOptions["data"] 
+    | {
+        operation: "database";
+        data: BackendResponseOptions["data"];
       }
     | {
         operation: "openSidePanel";
@@ -134,9 +139,9 @@ declare global {
   type BackendMessageOptions = {
     data: CRUDDataOptions;
     openSidePanel: {
-      method: "view_edit" | "create_schema" | "capture_body",
-      schema: Schema | Schema[]
-    }
+      method: "view_edit" | "create_schema" | "capture_body";
+      schema: Schema | Schema[];
+    };
     otherOperation: {
       otherField: string;
       success: boolean;
@@ -146,9 +151,9 @@ declare global {
   type BackendMessage =
     | { operation: "database"; data: BackendMessageOptions["data"] }
     | {
-      operation: "openSidePanel";
-      data: BackendMessageOptions["openSidePanel"]
-    }
+        operation: "openSidePanel";
+        data: BackendMessageOptions["openSidePanel"];
+      }
     | {
         operation: "otherOperation";
         data: BackendMessageOptions["otherOperation"];
@@ -162,9 +167,11 @@ declare global {
     method: DBOperations;
     type: DBOperationDataType;
     message: DBErrorMessage | null;
-    data?: UserContentModel | {
-      [key: string]: Schema
-    };
+    data?:
+      | UserContentModel
+      | {
+          [key: string]: Schema;
+        };
   };
 
   type DBOperations = "read" | "update" | "delete" | "create";
@@ -175,7 +182,7 @@ declare global {
     | "capture"
     | "all"
     | "other"
-    | "schemaMatches"
+    | "schemaMatches";
 
   type DBErrorMessage =
     | "Invalid data type"
@@ -186,21 +193,82 @@ declare global {
     | "Capture id does not exist"
     | "Create project request failed"
     | "Create schema request failed"
-    | "Capture id already exists" 
+    | "Capture id already exists"
     | "Invalid DB method"
-
 
     // DOM Exceptions
     | DOMException
     | "InvalidStateError"
-    | "TransactionInactiveError"
-  
+    | "TransactionInactiveError";
+
+  /**
+   * Misc Types
+   */
+  type SchemaMatches = {
+    schemaMatches: Schema[];
+  };
+
+  /**
+   * Prop Types
+   */
+  type IconProps = {
+    height: number;
+    width: number;
+    title: string;
+    onClick?: MouseEventHandler<HTMLButtonElement>;
     /**
-     * Misc Types
+     * Fill of svg line paths enclosed space fill
      */
-    type SchemaMatches = {
-      schemaMatches: Schema[]
-    }
-}
+    pathFill?: string;
+    /**
+     * Stroke colour
+     */
+    strokeColor?: string;
+    /**
+     * Background
+     */
+    svgFill?: string;
+  };
+
+  type AppButtonProps = {
+    onClick?: MouseEventHandler<HTMLButtonElement>;
+    children: ReactNode;
+    textStyle?: {};
+    buttonStyle?: {};
+    title: string;
+  };
+
+  type AppTableProps = {
+    tableData: TableData | null;
+    options: TableOptions;
+  };
+
+  type TableData = {
+    header: Array<string>;
+    data: Array<Array<string>>;
+  };
+
+  type TableOptions = {
+    enableDelete: boolean;
+    enableEdit: boolean;
+    enableInLineEdit: boolean
+    dataType: DBOperationDataType
+    id: string
+  };
+
+  type ProjectViewProps = {
+    projectId: ProjectId;
+  };
+
+  type TableDataTypeOptions =
+  | "projectList"
+  | "project"
+  | "captureList"
+  | "capture"
+  | "schemaList"
+  | "schema"
+  | "schemaMatchList";
+
+  }
 
 export {};

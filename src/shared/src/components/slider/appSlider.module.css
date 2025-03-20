@@ -1,0 +1,66 @@
+.slider_container {
+    /*LAYOUT*/
+    height: 100%;
+    width:75%;
+    padding:5px 0;
+    display:flex;
+    flex-direction:column;
+    align-items: center;
+    overflow: hidden;
+    border-radius: 10px;
+}
+
+.selector_container {
+    flex: 1;
+    width: 100%;
+    display:flex;
+    background-color: var(--primary);
+    justify-content: space-evenly;
+    position: relative;
+    z-index: 1;
+}
+
+.individual_selector {
+    max-width: 50%;
+    position: relative;
+    z-index: 1;
+    overflow: hidden;
+    transition: transform 0.3s ease;
+    cursor: pointer;
+}
+
+.individual_selector:hover {
+    transform: scale(1.1);
+}
+
+.selector_background {
+    position: absolute;
+    z-index: -1;
+    background-color: var(--secondary);
+    top: 5%;
+    height: 80%;
+    border-radius: 10px;
+    transition: left 0.2s ease, width 0.3s ease
+}
+
+/*DISPLACES BASED ON SELECTOR CHOICE*/
+.button_container {
+    flex: 1.5;
+    width: 100%;
+    position: relative;
+    display:flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    transition: right 0.3s ease
+}
+
+.button_container_inner {
+    min-width: 100%;
+    display: flex;
+    justify-content: center;
+    column-gap: 20px;
+    pointer-events: auto;
+    background-color: var(--primary);
+
+}
+

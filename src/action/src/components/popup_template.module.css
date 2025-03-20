@@ -1,0 +1,128 @@
+.popup_outer_container {
+    /*STYLE*/
+    height: 550px;
+    width: 375px;
+    border-radius: 20px;
+    box-shadow: 1px 2px 3px 1px var(--secondary);
+
+
+    /*LAYOUT*/
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative
+}
+
+.popup_header_container {
+    /*STYLE*/
+    width: 100%;
+    height: 10%;
+    background-color: var(--secondary);
+    box-shadow: 0px 2px 3px 1px var(--secondary);
+
+
+    /*LAYOUT*/
+    position: relative;
+    z-index: 10;
+
+    display: flex;
+    padding:  5px 2px;
+    padding-top:10px;
+    justify-content: space-between;
+    align-items: center;
+
+}
+
+.popup_content_container {
+    /*Style*/
+    width: 100%;
+    height: 65%;
+    background-color: var(--primary);
+
+    /*LAYOUT*/
+    position: relative;
+    z-index: 0;
+
+    
+}
+.popup_footer_container {
+    /*STYLE*/
+    width: 100%;
+    height: 25%;
+    background-color: var(--secondary);
+    box-shadow: 0px -2px 3px 1px var(--secondary);
+
+    /*LAYOUT*/
+    position: relative;
+    z-index:10;
+    display:flex;
+    flex-direction: column;
+    justify-content: start;
+    align-items: center;
+
+}
+
+.secondary_action_container {
+    height: 62%;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.primary_action_container {
+    /*STYLE*/
+    height: 35%;
+    width: 50px;
+    background-color: var(--primary);
+    padding: 10px;
+    border-radius: 25px;
+
+
+    /*LAYOUT*/
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+
+
+}
+
+.popup_header_logo_container {
+    /*STYLE*/
+    width: 60%;
+    height: 100%;
+    font-size: 0.75rem;
+
+    /*Layout*/
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+
+}
+
+.scrape_plate_logo {
+    background-color: var(--primary);
+    height: 40px;
+    width: 40px;
+    padding: 1px;
+    border-radius: 10px;
+}
+
+.popup_header_options_container {
+    /*STYLE*/
+    width: 20%;
+    height: 100%;
+
+    /*LAYOUT*/
+    display: flex;
+    align-items: center;
+}
+
+
+.back_button_container{ 
+    position: absolute;
+    top: 5%;
+    left: 5%;
+    z-index: 20;
+}

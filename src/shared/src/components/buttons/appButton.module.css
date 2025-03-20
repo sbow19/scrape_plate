@@ -1,0 +1,62 @@
+.appButton_default {
+    /* STYLE */
+    border-radius: 20px;
+    background-color: var(--white);
+    box-shadow: 1px 2px 3px 1px var(--secondary);
+    font-size: 1rem;
+    font-weight: 600;
+
+    /* LAYOUT */
+    height: 40px;
+    min-width: 100px;
+    max-width: 100px;
+    padding: 5px 2px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+
+    pointer-events: auto;
+    cursor: pointer;
+    position: relative; /* Set position relative to contain absolute children */
+
+}
+
+.button_inner {
+    width: 100%;
+    height: 100%;
+    color: black;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: transparent;
+    position: relative; /* Needed to contain the absolutely positioned pseudo-element */
+    z-index: 10; 
+}
+
+.button_inner::after {
+    content: '';
+    width: 200px;
+    height: 200px;
+    position: absolute;
+    background-color: var(--primary);
+    right: 120px; /* Start off-screen */
+    top: -10px; /* Ensure it's aligned to the top */
+    transition: right 0.5s ease; /* Smooth transition for the sliding effect */
+    z-index: -1; 
+}
+
+.appButton_default:hover .button_inner::after {
+    right: -10px; /* Slide into the container on hover */
+}
+
+.appButton_default:active {
+
+    top:2px;
+    left:1px;
+    box-shadow: 0px 0px 2px 1px var(--secondary);
+
+
+
+    
+}
