@@ -27,7 +27,8 @@
 }
 
 .project_name_container {
-    display: flex
+    display: flex;
+    justify-content: center;
 }
 
 .project_name_container > h3 {

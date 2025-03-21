@@ -8,37 +8,38 @@ import { ButtonSlider } from "../../../shared/src/components/slider/appSlider";
 import { AppTableTemplate } from "../../../shared/src/components/table/appTable";
 
 import * as styles from "./homeView.module.css";
-import { useMemo } from "react";
+import { useContext, useMemo } from "react";
 import { tableDataConverter } from "../../../shared/src/utils/helpers";
 import { AppButtonTemplate } from "../../../shared/src/components/buttons/appButton";
 import { useNavigate } from "react-router";
+import ToastContext from "../context/Toast";
 
 export const HomeView = () => {
   /*IMPLEMENT: Fetch schema matches here */
-  const matchingSchemasn = matchingSchemas;
   return (
     <>
       <PopupTemplate
-        contentComponent={
-          <ContentComponent matchingSchemas={matchingSchemasn} />
-        }
+        contentComponent={<ContentComponent matchingSchemas={[]} />}
         secondaryActions={<SecondaryActions />}
-        primaryAction={<PrimaryAction />}
+        primaryAction={<PrimaryAction matchingSchemas={[]} />}
         backButtonEnabled={false}
       />
     </>
   );
 };
 
-const ContentComponent = ({ matchingSchemas }) => {
+const ContentComponent = ({ matchingSchemas, currentProject }) => {
   const matchingDetailsTable: TableData | null = useMemo(() => {
     const cleanedData =
       matchingSchemas.length > 0
         ? tableDataConverter("schemaMatchList", Object.values(matchingSchemas))
         : null;
-      
-        return cleanedData
+
+    return cleanedData;
   }, [matchingSchemas]);
+
+  /* Navigation */
+  const navigate = useNavigate();
 
   return (
     <>
@@ -46,8 +47,21 @@ const ContentComponent = ({ matchingSchemas }) => {
         <div className={styles.current_project_container}>
           <h3 className={styles.current_project_title}>Current Project</h3>
           <div className={styles.project_name_wrapper}>
-            <p>{/* Current project name */} Project name </p>
-            <EditButton height={20} width={20} title="Change Project" />
+            {currentProject ? (
+              <>
+                <p>{/* Current project name */} Project name </p>
+                <EditButton
+                  height={20}
+                  width={20}
+                  title="Change Project"
+                  onClick={() => {
+                    navigate("/projects/1");
+                  }}
+                />
+              </>
+            ) : (
+              <>No current project</>
+            )}
           </div>
         </div>
         <div className={styles.matching_schemas_container}>
@@ -62,6 +76,7 @@ const ContentComponent = ({ matchingSchemas }) => {
                   enableDelete: false,
                   enableEdit: true,
                   enableInLineEdit: false,
+                  dataType: "schemas",
                 }}
               ></AppTableTemplate>
             ) : (
@@ -75,50 +90,69 @@ const ContentComponent = ({ matchingSchemas }) => {
 };
 
 const SecondaryActions = () => {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const dummySelectorData: Array<any> = [
     [
-        "Projects",
-        [
-            <AppButtonTemplate
-              onClick={()=>{
-                navigate('/projects')
-              }}
-            >View</AppButtonTemplate>,
-            <AppButtonTemplate
-            onClick={()=>{
-              navigate('/projects/create')
-            }}
-            >Create</AppButtonTemplate>
-        ]
+      "Projects",
+      [
+        <AppButtonTemplate
+          onClick={() => {
+            navigate("/projects");
+          }}
+        >
+          View
+        </AppButtonTemplate>,
+        <AppButtonTemplate
+          onClick={() => {
+            navigate("/projects/create");
+          }}
+        >
+          Create
+        </AppButtonTemplate>,
+      ],
     ],
     [
-        "Schemas",
-        [
-            <AppButtonTemplate
-            onClick={()=>{
-              navigate('/schemas')
-            }}
-            >View</AppButtonTemplate>,
-            <AppButtonTemplate>Create</AppButtonTemplate>
-        ]
-    ]
-  ]
+      "Schemas",
+      [
+        <AppButtonTemplate
+          onClick={() => {
+            navigate("/schemas");
+          }}
+        >
+          View
+        </AppButtonTemplate>,
+        <AppButtonTemplate>Create</AppButtonTemplate>,
+      ],
+    ],
+  ];
   return (
     <>
-      <ButtonSlider
-        selectorData={dummySelectorData}
-      ></ButtonSlider>
+      <ButtonSlider selectorData={dummySelectorData}></ButtonSlider>
     </>
   );
 };
 
-
-
-const PrimaryAction = () => {
+const PrimaryAction = ({ matchingSchemas }) => {
+  const [toastState, setToastState] = useContext(ToastContext);
   return (
     <>
-      <ScrapeButton height={30} width={30} title="Scrape" />
+      <ScrapeButton
+        height={30}
+        width={30}
+        title="Scrape"
+        onClick={() => {
+          if (matchingSchemas.length > 0) {
+            /* Execute scrape logic */
+          } else {
+            setToastState((prevState) => ({
+              open: true,
+              text: <p> No schema matches this page's url.</p>,
+              buttons: [],
+              timer: 1500,
+            }));
+          }
+        }}
+      />
     </>
   );
 };

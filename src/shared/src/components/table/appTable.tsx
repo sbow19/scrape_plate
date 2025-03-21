@@ -2,31 +2,55 @@
  * Table template
  */
 
-import { useState } from "react";
+import { useCallback, useContext, useState } from "react";
 import * as styles from "./appTable.module.css";
 import { EditButton, DeleteButton } from "../../assets/icons/appIcons";
 import { useNavigate } from "react-router";
+import ToastContext from "../../../../action/src/context/Toast";
+import { AppButtonTemplate } from "../buttons/appButton";
 
 
 export const AppTableTemplate: React.FC<AppTableProps> = ({
   tableData,
   options,
 }) => {
-  const [hoveredIndex, setHoveredIndex] = useState(null);
-
-  const handleMouseOver = (index) => {
-    setHoveredIndex(index);
-  };
-
-  const handleMouseOut = () => {
-    setHoveredIndex(null);
-  };
 
   const navigate = useNavigate()
 
+  /**
+   * TOAST OPERATIONS
+   */
+  const [toastState, setToastState] = useContext(ToastContext);
+  const handleDeleteEntry = useCallback((dataType, row)=>{
+    setToastState(prevState =>({
+      ...prevState,
+      open: true,
+      text: <p> Are you sure you want to delete {row[1]}?</p>, // Usually name of entry
+      buttons: [
+        <AppButtonTemplate
+          onClick={()=>{
+            setToastState(prevState=>({
+              open: false
+            }))
+          }}
+        > No </AppButtonTemplate>,
+        <AppButtonTemplate
+        onClick={()=>{
+          /* IMPLEMENT: trigger delete */
+          setToastState(prevState=>({
+            open: false
+          }))
+
+          console.log(row[0], dataType) // Id
+        }}
+        > Yes </AppButtonTemplate>,
+      ]
+    }))
+  }, [toastState])
+
   return (
     <>
-      {tableData && (
+      {tableData?.data && (
         <table className={styles.table_outer}>
           <thead>
             {tableData.header.map((header, index) => {
@@ -47,26 +71,16 @@ export const AppTableTemplate: React.FC<AppTableProps> = ({
                 <>
                   <tr
                     key={index}
-                    onMouseOver={() => handleMouseOver(index)} // Set hovered index
-                    onMouseOut={handleMouseOut} // Reset hovered index
-                    className={hoveredIndex === index ? "animated-row" : ""}
                   >
                     {row.map((dataPoint, index) => {
+                      // Skip first element as its reserved for ids
+                      if(index === 0) return 
                       return (
                         <>
                           <td key={index} className={options?.enableInLineEdit ?? null ? 'inline' : ''}>
-                            {options?.enableInLineEdit ? (
-                              <>
-                                {/* REFACTOR OUT */}
-                                <input type="text" value={dataPoint} className={styles.input_style} readOnly />
-                                <EditButton 
-                                  height={20}
-                                  width={20}
-                                />
-                              </>
-                            ) : (
-                              dataPoint
-                            )}
+                           
+                            {dataPoint}
+                            
 
                           </td>
                         </>
@@ -82,12 +96,13 @@ export const AppTableTemplate: React.FC<AppTableProps> = ({
                             height={25} 
                             width={25} 
                             onClick={()=>{
-                              navigate(`/projects/${1}`)
+                              
+                              navigate(`/${options.dataType}/${row[0]}`)
                             }}
                           />
                         )}
                         {options?.enableDelete && (
-                          <DeleteButton height={25} width={25} />
+                          <DeleteButton height={25} width={25} onClick={()=>handleDeleteEntry(options.dataType, row)}/>
                         )}
                       </td>
                     ) : null}

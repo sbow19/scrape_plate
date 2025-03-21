@@ -16,13 +16,12 @@ import { useNavigate } from "react-router";
 
 export const SchemaListView = () => {
   /*IMPLEMENT: Get all schemas from store */
-  const schemaList = schemaListn
   return (
     <>
       <PopupTemplate
         contentComponent={
           <ContentComponent
-            schemaList={schemaList}
+            schemaList={{}}
           />
         }
         secondaryActions={<SecondaryActions />}
@@ -63,8 +62,9 @@ const ContentComponent = ({ schemaList }) => {
           tableData={schemaDetailsTable}
           options={{
             enableDelete: true,
-            enableEdit: false,
+            enableEdit: true,
             enableInLineEdit: false,
+            dataType: 'schemas'
           }}
         />
       </div>
@@ -96,71 +96,4 @@ const PrimaryAction = () => {
         }}/>
     </>
   );
-};
-
-const schemaListn: {
-  [key: string]: Schema;
-} = {
-  "s11aa111-11aa-1111-a111-1a11a1a1a112": {
-    id: "s11aa111-11aa-1111-a111-1a11a1a1a112",
-    name: "schema2",
-    url_match: "https://www.google.com",
-    schema: {
-      id: {
-        key: {
-          match_expression: null,
-          match_type: "manual",
-          matched_value: "id",
-        },
-        value: {
-          match_expression: "id2",
-          match_type: "id",
-          matched_value: null,
-        },
-      },
-      name: {
-        key: {
-          match_expression: "id3",
-          match_type: "id",
-          matched_value: "name",
-        },
-        value: {
-          match_expression: "id4",
-          match_type: "id",
-          matched_value: null,
-        },
-      },
-    },
-  },
-  "s11aa111-11aa-1111-a111-1a11a1a1a111": {
-    id: "s11aa111-11aa-1111-a111-1a11a1a1a111",
-    name: "schema1",
-    url_match: "https://www.amazon.com",
-    schema: {
-      location: {
-        key: {
-          match_expression: "id1",
-          match_type: "id",
-          matched_value: "location",
-        },
-        value: {
-          match_expression: "id2",
-          match_type: "id",
-          matched_value: null,
-        },
-      },
-      age: {
-        key: {
-          match_expression: null,
-          match_type: "manual",
-          matched_value: "age",
-        },
-        value: {
-          match_expression: "id4",
-          match_type: "id",
-          matched_value: null,
-        },
-      },
-    },
-  },
 };

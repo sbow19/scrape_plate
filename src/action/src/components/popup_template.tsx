@@ -10,76 +10,98 @@ import {
 } from "../../../shared/src/assets/icons/appIcons";
 import { useNavigate } from "react-router";
 
+import ToastContext from "../context/Toast";
+import { Toast } from "./Toast";
+import { useEffect, useState } from "react";
+
 export const PopupTemplate = ({
   contentComponent,
   secondaryActions,
   primaryAction,
   backButtonEnabled,
 }) => {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
+
+  const handleToast = useState({
+    open: false
+  });
+
+
   return (
     <>
-      <div className={styles.popup_outer_container}>
-        <div className={styles.popup_header_container}>
-          <div className={styles.popup_header_logo_container}>
-            <img
-              src="src/assets/web-scraper-128.png"
-              alt="Scraper"
-              className={styles.scrape_plate_logo}
-            />
+      <ToastContext.Provider value={handleToast}>
+        <div className={styles.popup_outer_container}>
+          <div className={styles.popup_header_container}>
+            <div className={styles.popup_header_logo_container}>
+              <img
+                src="src/assets/web-scraper-128.png"
+                alt="Scraper"
+                className={styles.scrape_plate_logo}
+              />
 
-            <h1>Scrape Plate</h1>
-          </div>
-
-          <div className={styles.popup_header_options_container}>
-            <ExitButton
-              height={40}
-              width={40}
-              pathFill="transparent"
-              strokeColor="black"
-              svgFill="#353535ff"
-            />
-          </div>
-        </div>
-
-        <div className={styles.popup_content_container}>
-          {/* Back button  */}
-          {backButtonEnabled ? (
-            <div
-                className={styles.back_button_container}
-            >
-              <BackButton height={30} width={30} strokeColor="black" onClick={()=>{
-                navigate(-1)
-
-              }} />
+              <h1>Scrape Plate</h1>
             </div>
-          ) : null}
-          {contentComponent}
-        </div>
-        <div className={styles.popup_footer_container}>
-          <div className={styles.secondary_action_container}>
-            {/*  */}
 
-            {secondaryActions}
+            <div className={styles.popup_header_options_container}>
+              <ExitButton
+                height={40}
+                width={40}
+                pathFill="transparent"
+                strokeColor="black"
+                svgFill="#353535ff"
+              />
+            </div>
           </div>
 
-          <hr
-            style={{
-              width: "90%",
-              height: 1,
-              position: "relative",
-              zIndex: 100,
-              backgroundColor: "white",
-              bottom: 5,
-            }}
-          />
+          <div className={styles.popup_content_container}>
+            {/* Back button  */}
+            {backButtonEnabled ? (
+              <div className={styles.back_button_container}>
+                <BackButton
+                  height={30}
+                  width={30}
+                  strokeColor="black"
+                  onClick={() => {
+                    navigate(-1);
+                  }}
+                />
+              </div>
+            ) : null}
+            {contentComponent}
+          </div>
+          <div className={styles.popup_footer_container}>
+            <div className={styles.secondary_action_container}>
+              {/*  */}
 
-          <div className={styles.primary_action_container} title="Scrape">
-            {/* HOME OR SCRAPE BUTTON */}
-            {primaryAction}
+              {secondaryActions}
+            </div>
+
+            <hr
+              style={{
+                width: "90%",
+                height: 1,
+                position: "relative",
+                zIndex: 100,
+                backgroundColor: "white",
+                bottom: 5,
+              }}
+            />
+
+            <div className={styles.primary_action_container} title="Scrape">
+              {/* HOME OR SCRAPE BUTTON */}
+              {primaryAction}
+            </div>
           </div>
         </div>
-      </div>
+
+        {/* Toast */}
+        <Toast>
+          
+        </Toast>
+        
+      </ToastContext.Provider>
+
+      
     </>
   );
 };

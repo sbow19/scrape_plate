@@ -5,25 +5,24 @@ import { AppButtonTemplate } from "../../../shared/src/components/buttons/appBut
 import { AppTableTemplate } from "../../../shared/src/components/table/appTable";
 import { tableDataConverter } from "../../../shared/src/utils/helpers";
 import { PopupTemplate } from "../components/popup_template";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useContext, useMemo, useRef, useState } from "react";
 import * as styles from "./schemaView.module.css";
 import {
   EditButton,
   HomeButton,
 } from "../../../shared/src/assets/icons/appIcons";
 
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
+import ToastContext from "../context/Toast";
 
 export const SchemaView = () => {
   /* IMPLEMENT: Get schema data using schema id*/
-  const params = useParams()
-  console.log(params)
-  const schemaData = scheman;
+  const params = useParams();
   return (
     <>
       <PopupTemplate
-        contentComponent={<ContentComponent schemaData={schemaData} />}
-        secondaryActions={<SecondaryActions />}
+        contentComponent={<ContentComponent schemaData={{}} />}
+        secondaryActions={<SecondaryActions schemaId={''} schemaName={''}/>}
         primaryAction={<PrimaryAction />}
         backButtonEnabled={true}
       />
@@ -32,9 +31,6 @@ export const SchemaView = () => {
 };
 
 const ContentComponent = ({ schemaData }) => {
-  /**
-   * Convert capture details to form usable by table template, i.e. table data type
-   */
 
   /**
    * Schema name handlers
@@ -57,11 +53,11 @@ const ContentComponent = ({ schemaData }) => {
     setCurrentName(e.value);
   }, []);
 
-
   /**
    * Schema url match details
    */
   const schemaDetailsTable: TableData = useMemo(() => {
+    if(!schemaData.schema) return {}
     return tableDataConverter("schema", Object.values(schemaData.schema));
   }, [schemaData]);
 
@@ -90,24 +86,90 @@ const ContentComponent = ({ schemaData }) => {
           />
         </div>
         <div className={styles.created_at}>
-          <h3>
-            URL Match:{" "}
-            {schemaData.url_match}
-          </h3>
+          <h3>URL Match: {schemaData.url_match}</h3>
         </div>
         <div className={styles.table_title}>Schema Details</div>
       </div>
       <div className={styles.table_container}>
-        <AppTableTemplate
-          tableData={schemaDetailsTable}
-          options={null}
-        />
+        <AppTableTemplate tableData={schemaDetailsTable} options={null} />
       </div>
     </>
   );
 };
 
-const SecondaryActions = () => {
+const SecondaryActions = ({
+  schemaId,
+  schemaName
+}) => {
+  const [toastState, setToastState] = useContext(ToastContext);
+
+  /**
+   * Delete Schema toast trigger handler
+   */
+  const handleDeleteSchema = useCallback(() => {
+    setToastState((prevState) => ({
+      ...prevState,
+      open: true,
+      text: <p> Are you sure you want to delete {schemaName}?</p>, // Usually name of entry
+      buttons: [
+        <AppButtonTemplate
+          onClick={()=>{
+            setToastState(prevState=>({
+              open: false
+            }))
+          }}
+        > No </AppButtonTemplate>,
+        <AppButtonTemplate
+        onClick={()=>{
+          /* IMPLEMENT: trigger delete */
+          setToastState(prevState=>({
+            open: false
+          }))
+
+        }}
+        > Yes </AppButtonTemplate>,
+      ]
+    }));
+  }, [toastState]);
+
+  /**
+   * Export Schema toast trigger handler
+   */
+  const handleEditSchema = useCallback(() => {
+    setToastState((prevState) => ({
+      ...prevState,
+      open: true,
+    }));
+  }, [toastState]);
+
+  /**
+   * Save Schema toast trigger handler
+   */
+  const handleSaveSchema = useCallback(() => {
+    setToastState((prevState) => ({
+      ...prevState,
+      open: true,
+      text:<p> Save changes to {schemaName}?</p>,
+      buttons: [
+        <AppButtonTemplate
+          onClick={()=>{
+            setToastState(prevState=>({
+              open: false
+            }))
+          }}
+        > No </AppButtonTemplate>,
+        <AppButtonTemplate
+        onClick={()=>{
+          /* IMPLEMENT: trigger delete */
+          setToastState(prevState=>({
+            open: false
+          }))
+
+        }}
+        > Yes </AppButtonTemplate>,
+      ]
+    }));
+  }, [toastState]);
   return (
     <div className={styles.button_container}>
       <AppButtonTemplate
@@ -115,6 +177,7 @@ const SecondaryActions = () => {
           fontSize: 14,
           color: "#fb3640ff",
         }}
+        onClick={handleDeleteSchema}
       >
         Delete
       </AppButtonTemplate>
@@ -122,6 +185,7 @@ const SecondaryActions = () => {
         textStyle={{
           fontSize: 14,
         }}
+        onClick={handleEditSchema}
       >
         Edit
       </AppButtonTemplate>
@@ -130,6 +194,7 @@ const SecondaryActions = () => {
           fontSize: 14,
           color: "#006400",
         }}
+        onClick={handleSaveSchema}
       >
         Save Changes
       </AppButtonTemplate>
@@ -138,10 +203,17 @@ const SecondaryActions = () => {
 };
 
 const PrimaryAction = () => {
+  const navigate = useNavigate();
   return (
     <>
       {" "}
-      <HomeButton height={30} width={30} />
+      <HomeButton
+        height={30}
+        width={30}
+        onClick={() => {
+          navigate("/");
+        }}
+      />
     </>
   );
 };

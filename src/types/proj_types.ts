@@ -256,9 +256,6 @@ declare global {
     id: string
   };
 
-  type ProjectViewProps = {
-    projectId: ProjectId;
-  };
 
   type TableDataTypeOptions =
   | "projectList"
@@ -270,5 +267,12 @@ declare global {
   | "schemaMatchList";
 
   }
+
+  type ToastState = {
+    open: boolean,
+    text: HTMLParagraphElement,
+    buttons: Array<()=>{}>,
+    timer?: number  
+  };
 
 export {};

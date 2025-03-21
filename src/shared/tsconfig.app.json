@@ -27,5 +27,5 @@
 
   
   },
-  "include": ["src",  "../types/*"]
+  "include": ["src",  "../types/*", "../action/src/context/Toast.tsx"]
 }

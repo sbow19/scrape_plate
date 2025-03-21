@@ -334,6 +334,18 @@ export function tableDataConverter(
   data: Schema | Schema[]
 ): TableData | null ;
 
+/**
+ * 
+ * @param type 
+ * @param data 
+ * @returns Table data is an object with a header property and data property
+ * 
+ * The data property contains an array of arrays (list of   rows and datapoints).
+ * Each row of data is itself and array. For each row of data, the first index is
+ * reserved for the id representing the item for that row. This id is used for
+ * edit and delete operations.
+ * 
+ */
 export function tableDataConverter(
   type: TableDataTypeOptions,
   data: any
@@ -343,7 +355,7 @@ export function tableDataConverter(
       return {
         header: ["name", "url", "date captured"],
         data: data.map((capture: Capture) => {
-          return [capture.name, capture.url_match, convertISOToDate(capture.date_created)];
+          return [capture.id, capture.name, capture.url_match, convertISOToDate(capture.date_created)];
         }),
       };
     }
@@ -351,28 +363,28 @@ export function tableDataConverter(
       return {
         header: ["key", "value"],
         data: data.map((capture: SchemaEntry) => {
-          return [capture.key.matched_value, capture.value.matched_value];
+          return ['', capture.key.matched_value, capture.value.matched_value];
         }),
       };
     case "projectList":
       return {
         header: ["name", "date created", "last edited"],
         data: data.map((project: ProjectGroup) => {
-          return [project.name, convertISOToDate(project.date_created), convertISOToDate(project.last_edited)];
+          return [project.id, project.name, convertISOToDate(project.date_created), convertISOToDate(project.last_edited)];
         }),
       };
     case "schemaMatchList":
       return {
         header: ["name", "url match"],
         data: data.map((schema: Schema) => {
-          return [schema.name, schema.url_match];
+          return [schema.id, schema.name, schema.url_match];
         }),
       };
     case "schemaList":
       return {
         header: ["name", "url_match"],
         data: data.map((schema: Schema) => {
-          return [schema.name, schema.url_match];
+          return [schema.id, schema.name, schema.url_match];
         }),
       };
     /**
@@ -383,6 +395,7 @@ export function tableDataConverter(
         header: ["key", "type", "value", "type"],
         data: data.map((schema: SchemaEntry) => {
           return [
+            '',
             schema.key?.match_type === "manual"
               ? schema.key.matched_value
               : schema.key.match_expression,
@@ -400,6 +413,8 @@ export function tableDataConverter(
 }
 
 export function convertISOToDate(date: string):string {
+
+  if(!date) return null 
   const newDate = new Date(date)
   return `${newDate.getDay()} ${newDate.getMonth() + 1} ${newDate.getFullYear()}`
 }
