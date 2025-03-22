@@ -56,18 +56,18 @@ const ContentComponent = ({ schemaData }) => {
   /**
    * Schema url match details
    */
-  const schemaDetailsTable: TableData = useMemo(() => {
+  const schemaDetailsTable = useMemo(() => {
     if(!schemaData.schema) return {}
     return tableDataConverter("schema", Object.values(schemaData.schema));
   }, [schemaData]);
 
   return (
     <>
-      {" "}
+    
       <div className={styles.project_info_container}>
         <div className={styles.project_name_container}>
           <h3>
-            Schema:{" "}
+            Schema
             <input
               ref={inputNameRef}
               type="text"
@@ -101,75 +101,71 @@ const SecondaryActions = ({
   schemaId,
   schemaName
 }) => {
-  const [toastState, setToastState] = useContext(ToastContext);
+  const [, setToastState] = useContext(ToastContext);
 
   /**
    * Delete Schema toast trigger handler
    */
   const handleDeleteSchema = useCallback(() => {
-    setToastState((prevState) => ({
-      ...prevState,
+    setToastState({
       open: true,
       text: <p> Are you sure you want to delete {schemaName}?</p>, // Usually name of entry
       buttons: [
         <AppButtonTemplate
           onClick={()=>{
-            setToastState(prevState=>({
+            setToastState({
               open: false
-            }))
+            })
           }}
         > No </AppButtonTemplate>,
         <AppButtonTemplate
         onClick={()=>{
           /* IMPLEMENT: trigger delete */
-          setToastState(prevState=>({
+          setToastState({
             open: false
-          }))
+          })
 
         }}
         > Yes </AppButtonTemplate>,
       ]
-    }));
-  }, [toastState]);
+    });
+  }, [setToastState, schemaName]);
 
   /**
    * Export Schema toast trigger handler
    */
   const handleEditSchema = useCallback(() => {
-    setToastState((prevState) => ({
-      ...prevState,
+    setToastState({
       open: true,
-    }));
-  }, [toastState]);
+    });
+  }, [setToastState]);
 
   /**
    * Save Schema toast trigger handler
    */
   const handleSaveSchema = useCallback(() => {
-    setToastState((prevState) => ({
-      ...prevState,
+    setToastState(({
       open: true,
       text:<p> Save changes to {schemaName}?</p>,
       buttons: [
         <AppButtonTemplate
           onClick={()=>{
-            setToastState(prevState=>({
+            setToastState({
               open: false
-            }))
+            })
           }}
         > No </AppButtonTemplate>,
         <AppButtonTemplate
         onClick={()=>{
           /* IMPLEMENT: trigger delete */
-          setToastState(prevState=>({
-            open: false
-          }))
+          setToastState({
+            open: false})
 
         }}
         > Yes </AppButtonTemplate>,
       ]
     }));
-  }, [toastState]);
+  }, [setToastState, schemaName]);
   return (
     <div className={styles.button_container}>
       <AppButtonTemplate
@@ -206,46 +202,16 @@ const PrimaryAction = () => {
   const navigate = useNavigate();
   return (
     <>
-      {" "}
+    
       <HomeButton
         height={30}
         width={30}
         onClick={() => {
           navigate("/");
         }}
+        title='Home'
       />
     </>
   );
 };
 
-const scheman: Schema = {
-  id: "s11aa111-11aa-1111-a111-1a11a1a1a112",
-  name: "schema2",
-  url_match: "https://www.google.com",
-  schema: {
-    id: {
-      key: {
-        match_expression: null,
-        match_type: "manual",
-        matched_value: "location",
-      },
-      value: {
-        match_expression: "locationid",
-        match_type: "id",
-        matched_value: null,
-      },
-    },
-    name: {
-      key: {
-        match_expression: "id3",
-        match_type: "id",
-        matched_value: "name",
-      },
-      value: {
-        match_expression: "id4",
-        match_type: "id",
-        matched_value: null,
-      },
-    },
-  },
-};

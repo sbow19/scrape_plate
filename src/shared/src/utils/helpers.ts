@@ -331,16 +331,16 @@ export function tableDataConverter(type: "schemaList", data: Schema[]): TableDat
 export function tableDataConverter(type: "schema", data: SchemaEntry[]): TableData | null ;
 export function tableDataConverter(
   type: "schemaMatchList",
-  data: Schema | Schema[]
+  data: Schema[]
 ): TableData | null ;
 
 /**
  * 
- * @param type 
+ * @param type      // Determines headers and data parsing
  * @param data 
  * @returns Table data is an object with a header property and data property
  * 
- * The data property contains an array of arrays (list of   rows and datapoints).
+ * The data property contains an array of arrays (list of rows of datapoints).
  * Each row of data is itself and array. For each row of data, the first index is
  * reserved for the id representing the item for that row. This id is used for
  * edit and delete operations.
@@ -373,13 +373,17 @@ export function tableDataConverter(
           return [project.id, project.name, convertISOToDate(project.date_created), convertISOToDate(project.last_edited)];
         }),
       };
-    case "schemaMatchList":
+    case "schemaMatchList":{
+
+      const dataTyped = data as Schema[]
       return {
         header: ["name", "url match"],
-        data: data.map((schema: Schema) => {
+        data: dataTyped.map((schema) => {
           return [schema.id, schema.name, schema.url_match];
         }),
-      };
+      }
+
+    };
     case "schemaList":
       return {
         header: ["name", "url_match"],
@@ -412,9 +416,26 @@ export function tableDataConverter(
   }
 }
 
-export function convertISOToDate(date: string):string {
+export function convertISOToDate(date: string):string | null {
 
   if(!date) return null 
   const newDate = new Date(date)
-  return `${newDate.getDay()} ${newDate.getMonth() + 1} ${newDate.getFullYear()}`
+  return `${newDate.getDay() + 1} ${monthMatch[newDate.getMonth()]} ${newDate.getFullYear()}`
+}
+
+const monthMatch: {
+  [key: number]: string
+} = {
+  0: 'January',
+  1: 'February',
+  2: 'March',
+  3: 'April',
+  4: 'May',
+  5: 'June',
+  6: 'July',
+  7: 'August',
+  8: 'September',
+  9: 'October',
+  10: 'November',
+  11: 'December'
 }

@@ -6,26 +6,18 @@ import { AppButtonTemplate } from "../../../shared/src/components/buttons/appBut
 import { AppTableTemplate } from "../../../shared/src/components/table/appTable";
 import { useMemo } from "react";
 import * as styles from "./projectListView.module.css";
-import {
-  HomeButton,
-} from "../../../shared/src/assets/icons/appIcons";
-import {
-  tableDataConverter,
-} from "../../../shared/src/utils/helpers";
+import { HomeButton } from "../../../shared/src/assets/icons/appIcons";
+import { tableDataConverter } from "../../../shared/src/utils/helpers";
 
 import { useNavigate } from "react-router";
 
 export const ProjectListView = () => {
   /*IMPLEMENT: Get all schemas from store */
-  
+
   return (
     <>
       <PopupTemplate
-        contentComponent={
-          <ContentComponent
-            projectList={{}}
-          />
-        }
+        contentComponent={<ContentComponent projectList={{}} />}
         secondaryActions={<SecondaryActions />}
         primaryAction={<PrimaryAction />}
         backButtonEnabled={true}
@@ -35,29 +27,20 @@ export const ProjectListView = () => {
 };
 
 const ContentComponent = ({ projectList }) => {
-
-
   /**
    * Convert capture details to form usable by table template, i.e. table data type
    */
 
-  const projectDetailsTable: TableData = useMemo(() => {
-    return tableDataConverter(
-      "projectList",
-      Object.values(projectList)
-    );
+  const projectDetailsTable: TableData | null = useMemo(() => {
+    return tableDataConverter("projectList", Object.values(projectList));
   }, [projectList]);
 
   return (
     <>
       <div className={styles.project_info_container}>
         <div className={styles.project_name_container}>
-          <h3>
-            Projects           
-          </h3>
-          
+          <h3>Projects</h3>
         </div>
-       
       </div>
       <div className={styles.table_container}>
         <AppTableTemplate
@@ -66,7 +49,7 @@ const ContentComponent = ({ projectList }) => {
             enableDelete: true,
             enableEdit: true,
             enableInLineEdit: false,
-            dataType: "projects"
+            dataType: "project",
           }}
         />
       </div>
@@ -77,7 +60,6 @@ const ContentComponent = ({ projectList }) => {
 const SecondaryActions = () => {
   const navigate = useNavigate();
 
-  
   return (
     <div className={styles.button_container}>
       <AppButtonTemplate
@@ -85,8 +67,8 @@ const SecondaryActions = () => {
           fontSize: 14,
           color: "black",
         }}
-        onClick={()=>{
-          navigate('/projects/create')
+        onClick={() => {
+          navigate("/project/create");
         }}
       >
         Create Project
@@ -96,18 +78,16 @@ const SecondaryActions = () => {
 };
 
 const PrimaryAction = () => {
-
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   return (
     <>
-      <HomeButton 
-        height={30} 
-        width={30} 
-        onClick={()=>{
-          navigate('/')
+      <HomeButton
+        height={30}
+        width={30}
+        onClick={() => {
+          navigate("/");
         }}
       />
     </>
   );
 };
-

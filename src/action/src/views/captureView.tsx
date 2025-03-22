@@ -25,14 +25,14 @@ export const CaptureView = () => {
       <PopupTemplate
         contentComponent={
           <ContentComponent
-            projectDetails={projectDetailsn}
-            captureId={captureIdn}
+            projectDetails={{}}
+            captureId={''}
           />
         }
         secondaryActions={
           <SecondaryActions
-            projectDetails={projectDetailsn}
-            captureId={captureIdn}
+            projectDetails={{}}
+            captureId={''}
           />
         }
         primaryAction={<PrimaryAction />}
@@ -70,8 +70,7 @@ const ContentComponent = ({ projectDetails, captureId }) => {
     return projectDetails.captures[captureId];
   }, [projectDetails, captureId]);
 
-  const captureDetailsTable: TableData = useMemo(() => {
-    console.log(projectDetails.captures[captureId]);
+  const captureDetailsTable = useMemo(() => {
     return tableDataConverter(
       "capture",
       Object.values(projectDetails.captures[captureId].capture_body)
@@ -116,6 +115,7 @@ const ContentComponent = ({ projectDetails, captureId }) => {
             enableDelete: true,
             enableEdit: false,
             enableInLineEdit: true,
+            dataType: 'other'
           }}
         />
       </div>
@@ -129,51 +129,50 @@ const SecondaryActions = ({ projectDetails, captureId }) => {
    * Delete Capture toast trigger handler
    */
   const handleSaveCapture = useCallback(() => {
-    setToastState((prevState) => ({
-      ...prevState,
+    setToastState({
       open: true,
       text:<p> Save changes to capture?</p>,
       buttons: [
         <AppButtonTemplate
           onClick={()=>{
-            setToastState(prevState=>({
+            setToastState({
               open: false
-            }))
+            })
           }}
         > No </AppButtonTemplate>,
         <AppButtonTemplate
         onClick={()=>{
           /* IMPLEMENT: trigger delete */
-          setToastState(prevState=>({
+          setToastState({
             open: false
-          }))
+          })
 
         }}
         > Yes </AppButtonTemplate>,
       ]
-    }));
-  }, [toastState]);
+    });
+  }, [setToastState]);
 
   /**
    * Export Capture toast trigger handler
    */
   const handleDeleteCapture = useCallback(() => {
-    setToastState((prevState) => ({
-      ...prevState,
+    setToastState({
+
       open: true,
       text: (
         <p>
-          {" "}
-          Are you sure you want to delete{" "}
+          
+          Are you sure you want to delete
           {projectDetails.captures[captureId].name}?
         </p>
       ), // Usually name of entry
       buttons: [
         <AppButtonTemplate
           onClick={() => {
-            setToastState((prevState) => ({
+            setToastState({
               open: false,
-            }));
+            });
           }}
         >
           {" "}
@@ -182,39 +181,38 @@ const SecondaryActions = ({ projectDetails, captureId }) => {
         <AppButtonTemplate
           onClick={() => {
             /* IMPLEMENT: trigger delete */
-            setToastState((prevState) => ({
+            setToastState({
               open: false,
-            }));
+            });
           }}
         >
           {" "}
           Yes{" "}
         </AppButtonTemplate>,
       ],
-    }));
-  }, [toastState]);
+    });
+  }, [setToastState]);
 
   /**
    * Save Capture toast trigger handler
    */
   const handleExportCapture = useCallback(() => {
-    setToastState((prevState) => ({
-      ...prevState,
+    setToastState({
       open: true,
       text: <p>How do you want to export {projectDetails.captures[captureId].name}?</p>,
       buttons: [
         <AppButtonTemplate
           onClick={() => {
-            setToastState((prevState) => ({
+            setToastState({
               open: false,
-            }));
+            });
           }}
         >
           Back
         </AppButtonTemplate>,
         <AppDropdown options={["json", "excel"]} data={projectDetails.captures[captureId]} />,
       ],
-    }));
+    });
   }, [toastState]);
   return (
     <div className={styles.button_container}>
@@ -254,88 +252,7 @@ const PrimaryAction = () => {
     <>
       <HomeButton height={30} width={30} onClick={()=>{
         navigate('/')
-      }}/>
+      }} title="Home"/>
     </>
   );
-};
-
-const captureIdn = "c11aa111-11aa-1111-a111-1a11a1a1a112";
-
-const projectDetailsn: ProjectGroup = {
-  name: "project1",
-  date_created: "2025-01-10T14:30:00",
-  last_edited: "2025-03-13T14:30:00",
-  id: "a11aa111-11aa-1111-a111-1a11a1a1a111",
-  captures: {
-    "c11aa111-11aa-1111-a111-1a11a1a1a111": {
-      id: "c11aa111-11aa-1111-a111-1a11a1a1a111",
-      url_match: "https://",
-      date_created: "2025-01-11T14:30:00",
-      last_edited: "2025-01-12T14:30:00",
-      project_id: "a11aa111-11aa-1111-a111-1a11a1a1a111",
-      schema_id: "s11aa111-11aa-1111-a111-1a11a1a1a111",
-      name: "capture1",
-      capture_body: {
-        location: {
-          key: {
-            match_expression: "id1",
-            match_type: "id",
-            matched_value: "location",
-          },
-          value: {
-            match_expression: "id2",
-            match_type: "id",
-            matched_value: "Hamburg",
-          },
-        },
-        age: {
-          key: {
-            match_expression: null,
-            match_type: "manual",
-            matched_value: "age",
-          },
-          value: {
-            match_expression: "id4",
-            match_type: "id",
-            matched_value: "22",
-          },
-        },
-      },
-    },
-    "c11aa111-11aa-1111-a111-1a11a1a1a112": {
-      id: "c11aa111-11aa-1111-a111-1a11a1a1a112",
-      date_created: "2025-01-11T14:30:00",
-      last_edited: "2025-01-12T14:30:00",
-      schema_id: "s11aa111-11aa-1111-a111-1a11a1a1a112",
-      project_id: "a11aa111-11aa-1111-a111-1a11a1a1a111",
-      name: "capture2",
-      url_match: "https://",
-      capture_body: {
-        id: {
-          key: {
-            match_expression: null,
-            match_type: "manual",
-            matched_value: "id",
-          },
-          value: {
-            match_expression: "id2",
-            match_type: "id",
-            matched_value: "Go",
-          },
-        },
-        name: {
-          key: {
-            match_expression: "id3",
-            match_type: "id",
-            matched_value: "name",
-          },
-          value: {
-            match_expression: "id4",
-            match_type: "id",
-            matched_value: "Is great",
-          },
-        },
-      },
-    },
-  },
 };

@@ -1,6 +1,5 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-
 import { createBrowserRouter,  RouterProvider} from "react-router";
 /**
  * Global  styles
@@ -26,27 +25,27 @@ const router = createBrowserRouter([
     element: <WelcomeView />
   },
   {
-    path: '/projects',
+    path: '/project',
     element: <ProjectListView/>
   },
   {
-    path: '/projects/:projectId',
+    path: '/project/:projectId',
     element: <ProjectView/>
   },
   {
-    path: '/captures/:captureId',
+    path: '/capture/:captureId',
     element: <CaptureView/>
   },
   {
-    path: '/projects/create',
+    path: '/project/create',
     element: <CreateProject/>
   },
   {
-    path: '/schemas',
+    path: '/schema',
     element: <SchemaListView/>
   },
   {
-    path: '/schemas/:schemaId',
+    path: '/schema/:schemaId',
     element: <SchemaView/>
   }
 ]);

@@ -9,7 +9,6 @@ export const AppButtonTemplate: React.FC<AppButtonProps> = ({
     textStyle,
     buttonStyle,
     title
-
 })=>{
     return(
         <>

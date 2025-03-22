@@ -15,6 +15,7 @@ export const WelcomeView = () => {
         contentComponent={<ContentComponent/>}
         secondaryActions={<SecondaryActions/>}
         primaryAction={<PrimaryAction />}
+        backButtonEnabled={false}
       />
     </>
   );
@@ -81,6 +82,7 @@ const PrimaryAction = () => {
             onClick={()=>{
               navigate('/')
             }}
+            title='Home'
         />
     </>)
 };

@@ -1,28 +1,24 @@
 /**
- * Popup template.
- *
- * Home, Capture, Project, and Schema pages populate this template
+ * SIDE PANEL TEMPLATE
+ * MANAGE SCHEMA CREATION, EDITOR, AND CAPTURE VIEW
  */
-import * as styles from "./popup_template.module.css";
+import * as styles from "./side_panel_template.module.css";
 import {
   BackButton,
   ExitButton,
 } from "../../../shared/src/assets/icons/appIcons";
-import { useNavigate } from "react-router";
 
 import ToastContext from "../context/Toast";
 import { Toast } from "./Toast";
 import { useState } from "react";
 
-export const PopupTemplate: React.FC<PopupTemplateProps> = ({
-  contentComponent,
+export const SidePanelTemplate: React.FC = ({
+  children,
   secondaryActions,
   primaryAction,
-  backButtonEnabled,
 }) => {
-  const navigate = useNavigate();
   const handleToast = useState<ToastState>({
-    open: false
+    open: false,
   });
   return (
     <>
@@ -43,7 +39,7 @@ export const PopupTemplate: React.FC<PopupTemplateProps> = ({
               <ExitButton
                 height={40}
                 width={40}
-                title='Exit'
+                title="Exit"
                 pathFill="transparent"
                 strokeColor="black"
                 svgFill="#353535ff"
@@ -53,20 +49,20 @@ export const PopupTemplate: React.FC<PopupTemplateProps> = ({
 
           <div className={styles.popup_content_container}>
             {/* Back button  */}
-            {backButtonEnabled ? (
-              <div className={styles.back_button_container}>
-                <BackButton
-                  height={30}
-                  width={30}
-                  strokeColor="black"
-                  onClick={() => {
-                    navigate(-1);
-                  }}
-                  title='Back'
-                />
-              </div>
-            ) : null}
-            {contentComponent}
+
+            <div className={styles.back_button_container}>
+              <BackButton
+                height={30}
+                width={30}
+                strokeColor="black"
+                onClick={() => {
+                  /* Trigger return to popup */
+                }}
+                title="Back"
+              />
+            </div>
+
+            {children}
           </div>
           <div className={styles.popup_footer_container}>
             <div className={styles.secondary_action_container}>
@@ -74,30 +70,11 @@ export const PopupTemplate: React.FC<PopupTemplateProps> = ({
 
               {secondaryActions}
             </div>
-
-            <hr
-              style={{
-                width: "90%",
-                height: 1,
-                position: "relative",
-                zIndex: 100,
-                backgroundColor: "white",
-                bottom: 5,
-              }}
-            />
-
-            <div className={styles.primary_action_container} title="Scrape">
-              {/* HOME OR SCRAPE BUTTON */}
-              {primaryAction}
-            </div>
           </div>
         </div>
 
         {/* Toast */}
-        <Toast>
-          
-        </Toast>
-        
+        <Toast></Toast>
       </ToastContext.Provider>
     </>
   );

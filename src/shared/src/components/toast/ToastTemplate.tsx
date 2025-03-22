@@ -1,29 +1,29 @@
 import * as styles from "./Toast.module.css";
 
-export const ToastTemplate = ({
+export const ToastTemplate: React.FC<ToastProps> = ({
     toastState,
     setToastState
 }) => {
 
+  /* AUTOMATICALLY CLOSE */
   if(toastState.timer){
     setTimeout(()=>{
-      setToastState(prevState=>({
+      setToastState({
         open: false
-      }))
+      })
     }, toastState.timer)
   }
   return (
-    <div className={styles.toast_container} onClick={(e)=>{
-        setToastState(prevState => ({
-            ...prevState,
+    <div className={styles.toast_container} onClick={()=>{
+        setToastState({
             open:false
-        }))
+        })
     }}>
       <div className={styles.toast_inner_container}>
         <div
             className={styles.toast_view}
             onClick={(e)=>{
-              /* PREVENT CLOSING TOAST */
+              /* PREVENT CLOSING TOAST when clicking toast*/
               e.stopPropagation()
             }}
         >
@@ -45,7 +45,7 @@ export const ToastTemplate = ({
             className={styles.toast_button_section}
           >
             {
-              toastState.buttons.map((button, index)=>{
+              toastState.buttons && toastState.buttons.map((button, index)=>{
                 return button
               })
             }

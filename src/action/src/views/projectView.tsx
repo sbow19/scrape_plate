@@ -10,16 +10,18 @@ import { AppButtonTemplate } from "../../../shared/src/components/buttons/appBut
 import * as styles from "./projectView.module.css";
 import { AppTableTemplate } from "../../../shared/src/components/table/appTable";
 import { useCallback, useContext, useMemo, useRef, useState } from "react";
-import { tableDataConverter, convertISOToDate } from "../../../shared/src/utils/helpers";
+import {
+  tableDataConverter,
+  convertISOToDate,
+} from "../../../shared/src/utils/helpers";
 
 import { useNavigate, useParams } from "react-router";
 import ToastContext from "../context/Toast";
 import { AppDropdown } from "../../../shared/src/components/dropdownSelector/AppDropdown";
 
-export const ProjectView: React.FC<ProjectViewProps> = () => {
-  
+export const ProjectView: React.FC = () => {
   /* GET PROJECT DETAILS */
-  const params = useParams()
+  const params = useParams();
 
   return (
     <>
@@ -35,40 +37,41 @@ export const ProjectView: React.FC<ProjectViewProps> = () => {
 
 const ContentComponent = ({ projectDetails }) => {
   const inputRef = useRef<HTMLInputElement>(null);
-  const handleFocus = useCallback(()=>{
-    if(inputRef.current){
-      inputRef.current.readOnly = false
-      inputRef.current.focus()
+  const handleFocus = useCallback(() => {
+    if (inputRef.current) {
+      inputRef.current.readOnly = false;
+      inputRef.current.focus();
     }
-  }, [])
-  const handleBlur = useCallback(()=>{
-    if(inputRef.current){
-      inputRef.current.readOnly = true
+  }, []);
+  const handleBlur = useCallback(() => {
+    if (inputRef.current) {
+      inputRef.current.readOnly = true;
     }
-  }, [])
+  }, []);
 
   // Input value
-  const [currentName, setCurrentName] = useState(projectDetails.name)
-  const handleChangeText = useCallback((e)=>{
-    setCurrentName(e.value)
-  }, [])
-
+  const [currentName, setCurrentName] = useState(projectDetails.name);
+  const handleChangeText = useCallback((e) => {
+    setCurrentName(e.value);
+  }, []);
 
   /**
    * Convert capture details to form usable by table template, i.e. table data type
    */
-  const projectDetailsTable = useMemo(()=>{
-    if(!projectDetails.captures)return {}
-    return tableDataConverter('captureList', Object.values(projectDetails.captures))
-  }, [projectDetails])
+  const projectDetailsTable = useMemo(() => {
+    if (!projectDetails.captures) return null;
+    return tableDataConverter(
+      "captureList",
+      Object.values(projectDetails.captures)
+    );
+  }, [projectDetails]);
 
-  
   return (
     <>
       <div className={styles.project_info_container}>
         <div className={styles.project_name_container}>
           <h3>
-            Project:{" "}
+            Project:
             <input
               ref={inputRef}
               type="text"
@@ -79,24 +82,31 @@ const ContentComponent = ({ projectDetails }) => {
               onChange={handleChangeText}
             />
           </h3>
-          <EditButton height={20} width={20} onClick={handleFocus} title='Edit Name'/>
+          <EditButton
+            height={20}
+            width={20}
+            onClick={handleFocus}
+            title="Edit Name"
+          />
         </div>
         <div className={styles.created_at}>
-          <b>Created At:</b> {convertISOToDate(projectDetails?.date_created ?? null)}
+          <b>Created At:</b>
+          {convertISOToDate(projectDetails?.date_created ?? null)}
         </div>
         <div className={styles.last_edited}>
-          <b>Last Edited:</b> {convertISOToDate(projectDetails?.last_edited ?? null)}
+          <b>Last Edited:</b>
+          {convertISOToDate(projectDetails?.last_edited ?? null)}
         </div>
         <div className={styles.table_title}>Captures</div>
       </div>
       <div className={styles.table_container}>
-        <AppTableTemplate 
+        <AppTableTemplate
           tableData={projectDetailsTable}
           options={{
             enableEdit: true,
             enableDelete: true,
             enableInLineEdit: false,
-            dataType: "captures"
+            dataType: "capture",
           }}
         />
       </div>
@@ -104,91 +114,97 @@ const ContentComponent = ({ projectDetails }) => {
   );
 };
 
-const SecondaryActions = ({projectDetails}) => {
-  const [toastState, setToastState] = useContext(ToastContext)
+const SecondaryActions = ({ projectDetails }) => {
+  const [toastState, setToastState] = useContext(ToastContext);
   /**
    * Delete project toast trigger handler
    */
-  const handleDeleteProject = useCallback(()=>{
-    setToastState(prevState =>({
+  const handleDeleteProject = useCallback(() => {
+    setToastState((prevState) => ({
       ...prevState,
-      open: true, 
+      open: true,
       text: <p> Are you sure you want to delete {projectDetails.name}?</p>, // Usually name of entry
       buttons: [
         <AppButtonTemplate
-          onClick={()=>{
-            setToastState(prevState=>({
-              open: false
-            }))
+          onClick={() => {
+            setToastState({
+              open: false,
+            });
           }}
-        > No </AppButtonTemplate>,
+        >
+          
+          No
+        </AppButtonTemplate>,
         <AppButtonTemplate
-        onClick={()=>{
-          /* IMPLEMENT: trigger delete */
-          setToastState(prevState=>({
-            open: false
-          }))
-
-        }}
-        > Yes </AppButtonTemplate>,
-      ]
-    }))
-  }, [toastState])
+          onClick={() => {
+            /* IMPLEMENT: trigger delete */
+            setToastState({
+              open: false,
+            });
+          }}
+        >
+          
+          Yes
+        </AppButtonTemplate>,
+      ],
+    }));
+  }, [toastState]);
 
   /**
    * Export project toast trigger handler
    */
-  const handleExportProject = useCallback(()=>{
-    setToastState(prevState =>({
+  const handleExportProject = useCallback(() => {
+    setToastState((prevState) => ({
       ...prevState,
       open: true,
       text: <p>How do you want to export {projectDetails.name}?</p>,
       buttons: [
         <AppButtonTemplate
-          onClick={()=>{
-            setToastState(prevState=>({
-              open:false
-            }))
+          onClick={() => {
+            setToastState((prevState) => ({
+              open: false,
+            }));
           }}
-        >Back</AppButtonTemplate>,
-          <AppDropdown options={[
-            "json",
-            "excel"
-          ]}
-          data={projectDetails}
-          />
-      ]
-    }))
-  }, [toastState])
+        >
+          Back
+        </AppButtonTemplate>,
+        <AppDropdown options={["json", "excel"]} data={projectDetails} />,
+      ],
+    }));
+  }, [toastState]);
 
   /**
    * Save project toast trigger handler
    */
-  const handleSaveProject = useCallback(()=>{
-    setToastState(prevState =>({
-      ...prevState,
+  const handleSaveProject = useCallback(() => {
+    setToastState({
       open: true,
-      text:<p> Save changes to {projectDetails.name}?</p>,
+      text: <p> Save changes to {projectDetails.name}?</p>,
       buttons: [
         <AppButtonTemplate
-          onClick={()=>{
-            setToastState(prevState=>({
-              open: false
-            }))
+          onClick={() => {
+            setToastState({
+              open: false,
+            });
           }}
-        > No </AppButtonTemplate>,
+        >
+          
+          No
+        </AppButtonTemplate>,
         <AppButtonTemplate
-        onClick={()=>{
-          /* IMPLEMENT: trigger delete */
-          setToastState(prevState=>({
-            open: false
-          }))
-
-        }}
-        > Yes </AppButtonTemplate>,
-      ]
-    }))
-  }, [toastState])
+          onClick={() => {
+            /* IMPLEMENT: trigger delete */
+            setToastState({
+              open: false,
+            });
+          }}
+        >
+          
+          Yes
+        </AppButtonTemplate>,
+      ],
+    });
+  }, [toastState]);
 
   return (
     <div className={styles.button_container}>
@@ -223,12 +239,17 @@ const SecondaryActions = ({projectDetails}) => {
 };
 
 const PrimaryAction = () => {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   return (
     <>
-      <HomeButton height={30} width={30} onClick={()=>{
-        navigate('/')
-      }}/>
+      <HomeButton
+        height={30}
+        width={30}
+        onClick={() => {
+          navigate("/");
+        }}
+        title='Home'
+      />
     </>
   );
 };

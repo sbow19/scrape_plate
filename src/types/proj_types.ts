@@ -232,10 +232,26 @@ declare global {
 
   type AppButtonProps = {
     onClick?: MouseEventHandler<HTMLButtonElement>;
-    children: ReactNode;
+    children: React.ReactNode;
+    /**
+     * Style the text directly with CSS style object
+     */
     textStyle?: {};
+    /**
+     * Style the button itself with CSS style object
+     */
     buttonStyle?: {};
-    title: string;
+    /**
+     * Tooltip
+     */
+    title?: string;
+  };
+
+  type PopupTemplateProps = {
+    contentComponent: React.ReactNode;
+    secondaryActions: React.ReactNode;
+    primaryAction: React.ReactNode;
+    backButtonEnabled: boolean;
   };
 
   type AppTableProps = {
@@ -243,36 +259,99 @@ declare global {
     options: TableOptions;
   };
 
+  type ToastProps = {
+    toastState: ToastState;
+    setToastState: React.Dispatch<React.SetStateAction<ToastState>>;
+  };
+
+  type ButtonSliderProps = {
+    selectorData: Array<[string, Array<React.ReactNode>]>;
+  };
+
+  type ButtonWrapperProps = {
+    /**
+     * Tooltip on hover
+     */
+    title: string
+    children: React.ReactNode
+    onClick: ()=> void
+    /**
+     * CSS Module outside button template
+     */
+    buttonStyle?: string       
+  }
+
+  type SchemaFormTemplateProps = {
+    modelType: ModelTypes
+    operation: 'create_schema' | 'edit_schema' | 'edit_capture'
+    model?: Schema | Capture
+  }
+
+  type SchemaFormProps = {
+    formModel: Capture | Schema
+    modelReducerObject:ReducerObject
+  }
+
+  type SchemaFormTableProps = {
+    formModel: Capture | Schema
+    operation: 'create_schema' | 'edit_schema' | 'edit_capture'
+    modelReducerObject: ReducerObject
+  }
+
   type TableData = {
     header: Array<string>;
     data: Array<Array<string>>;
+    /**
+     * List of rows of data points. First item in row considered id, and the second element the name
+     *  */
   };
 
   type TableOptions = {
     enableDelete: boolean;
     enableEdit: boolean;
-    enableInLineEdit: boolean
-    dataType: DBOperationDataType
-    id: string
+    enableInLineEdit: boolean;
+    dataType: DBOperationDataType;
   };
-
 
   type TableDataTypeOptions =
-  | "projectList"
-  | "project"
-  | "captureList"
-  | "capture"
-  | "schemaList"
-  | "schema"
-  | "schemaMatchList";
-
-  }
+    | "projectList"
+    | "project"
+    | "captureList"
+    | "capture"
+    | "schemaList"
+    | "schema"
+    | "schemaMatchList";
 
   type ToastState = {
-    open: boolean,
-    text: HTMLParagraphElement,
-    buttons: Array<()=>{}>,
-    timer?: number  
+    open: boolean;
+    text?: React.ReactNode;
+    buttons?: Array<React.ReactNode>;
+    timer?: number;
   };
+
+  /**
+   * HOOKS
+   */
+
+  //use Model hook
+  type ModelTypes =  'schema' | 'capture'
+
+  type ReducerObject = {
+    modelKeys: Array<string>
+    update: (
+      key: string
+      content: any
+    )=>void 
+    delete: (
+      key: string
+      content: any
+    )=>void 
+    create: (
+      key: string
+      content: any
+    )=>void 
+    read: ()=>Schema | Capture
+  }
+}
 
 export {};

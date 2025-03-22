@@ -28,8 +28,6 @@ export const CreateProject = () => {
 const ContentComponent = ({
   onChange
 }) => {
-
-
   return (
     <div className={styles.form_container}>
       <h3>Project Name</h3>
@@ -51,22 +49,21 @@ const SecondaryActions = ({
   const [toastState, setToastState] = useContext(ToastContext)
   const handleCreateProject = useCallback(()=>{
     if(projectName.length < 4) return
-    setToastState(prevState =>({
-      ...prevState,
+    setToastState({
       open: true,
       text: <p>Do you want to create the project {projectName}?</p>,
       buttons: [
         <AppButtonTemplate
           onClick={()=>{
-            setToastState(prevState=>({
+            setToastState({
               open:false
-            }))
+            })
           }}
         
         > No </AppButtonTemplate>,
         <AppButtonTemplate> Yes </AppButtonTemplate>
       ]
-    }))
+    })
   }, [toastState, projectName])
   
   return (
@@ -90,7 +87,7 @@ const PrimaryAction = () => {
     <>
       <HomeButton height={30} width={30}  onClick={()=>{
           navigate('/')
-        }} />
+        }} title="Home"/>
     </>
   );
 };

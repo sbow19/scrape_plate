@@ -234,16 +234,21 @@ export const SeeButton: React.FC<IconProps> = ({
   );
 };
 
-const ButtonWrapper: React.FC = ({
+/**
+ *  Button wrapper for app icons 
+ */
+const ButtonWrapper: React.FC<ButtonWrapperProps> = ({
   children,
   onClick,
-  buttonStyle
+  buttonStyle,
+  title
 })=>{
 
   return (
   <button
     onClick={onClick}
     className={buttonStyle ? buttonStyle : styles.icon_button}
+    title={title}
   >
     {children}
   

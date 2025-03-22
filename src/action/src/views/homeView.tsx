@@ -19,7 +19,7 @@ export const HomeView = () => {
   return (
     <>
       <PopupTemplate
-        contentComponent={<ContentComponent matchingSchemas={[]} />}
+        contentComponent={<ContentComponent matchingSchemas={[]} currentProject={{}}/>}
         secondaryActions={<SecondaryActions />}
         primaryAction={<PrimaryAction matchingSchemas={[]} />}
         backButtonEnabled={false}
@@ -32,7 +32,7 @@ const ContentComponent = ({ matchingSchemas, currentProject }) => {
   const matchingDetailsTable: TableData | null = useMemo(() => {
     const cleanedData =
       matchingSchemas.length > 0
-        ? tableDataConverter("schemaMatchList", Object.values(matchingSchemas))
+        ? tableDataConverter("schemaMatchList", matchingSchemas)
         : null;
 
     return cleanedData;
@@ -49,13 +49,13 @@ const ContentComponent = ({ matchingSchemas, currentProject }) => {
           <div className={styles.project_name_wrapper}>
             {currentProject ? (
               <>
-                <p>{/* Current project name */} Project name </p>
+                <p>{/* Current project name */} {currentProject.name} </p>
                 <EditButton
                   height={20}
                   width={20}
                   title="Change Project"
                   onClick={() => {
-                    navigate("/projects/1");
+                    navigate(`/project/${currentProject.id}`);
                   }}
                 />
               </>
@@ -76,7 +76,7 @@ const ContentComponent = ({ matchingSchemas, currentProject }) => {
                   enableDelete: false,
                   enableEdit: true,
                   enableInLineEdit: false,
-                  dataType: "schemas",
+                  dataType: "schema",
                 }}
               ></AppTableTemplate>
             ) : (
@@ -91,20 +91,20 @@ const ContentComponent = ({ matchingSchemas, currentProject }) => {
 
 const SecondaryActions = () => {
   const navigate = useNavigate();
-  const dummySelectorData: Array<any> = [
+  const dummySelectorData: Array<[string, Array<React.ReactNode>]> = [
     [
       "Projects",
       [
         <AppButtonTemplate
           onClick={() => {
-            navigate("/projects");
+            navigate("/project");
           }}
         >
           View
         </AppButtonTemplate>,
         <AppButtonTemplate
           onClick={() => {
-            navigate("/projects/create");
+            navigate("/project/create");
           }}
         >
           Create
@@ -116,7 +116,7 @@ const SecondaryActions = () => {
       [
         <AppButtonTemplate
           onClick={() => {
-            navigate("/schemas");
+            navigate("/schema");
           }}
         >
           View
@@ -133,7 +133,7 @@ const SecondaryActions = () => {
 };
 
 const PrimaryAction = ({ matchingSchemas }) => {
-  const [toastState, setToastState] = useContext(ToastContext);
+  const [, setToastState] = useContext(ToastContext);
   return (
     <>
       <ScrapeButton
@@ -144,12 +144,12 @@ const PrimaryAction = ({ matchingSchemas }) => {
           if (matchingSchemas.length > 0) {
             /* Execute scrape logic */
           } else {
-            setToastState((prevState) => ({
+            setToastState({
               open: true,
               text: <p> No schema matches this page's url.</p>,
               buttons: [],
-              timer: 1500,
-            }));
+              timer: 1250,
+            });
           }
         }}
       />
@@ -157,67 +157,4 @@ const PrimaryAction = ({ matchingSchemas }) => {
   );
 };
 
-const matchingSchemas: Array<Schema> = [
-  {
-    id: "s11aa111-11aa-1111-a111-1a11a1a1a112",
-    name: "schema2",
-    url_match: "https://www.google.com",
-    schema: {
-      id: {
-        key: {
-          match_expression: null,
-          match_type: "manual",
-          matched_value: "id",
-        },
-        value: {
-          match_expression: "id2",
-          match_type: "id",
-          matched_value: null,
-        },
-      },
-      name: {
-        key: {
-          match_expression: "id3",
-          match_type: "id",
-          matched_value: "name",
-        },
-        value: {
-          match_expression: "id4",
-          match_type: "id",
-          matched_value: null,
-        },
-      },
-    },
-  },
-  {
-    id: "s11aa111-11aa-1111-a111-1a11a1a1a112",
-    name: "schema2",
-    url_match: "https://www.google.com",
-    schema: {
-      id: {
-        key: {
-          match_expression: null,
-          match_type: "manual",
-          matched_value: "id",
-        },
-        value: {
-          match_expression: "id2",
-          match_type: "id",
-          matched_value: null,
-        },
-      },
-      name: {
-        key: {
-          match_expression: "id3",
-          match_type: "id",
-          matched_value: "name",
-        },
-        value: {
-          match_expression: "id4",
-          match_type: "id",
-          matched_value: null,
-        },
-      },
-    },
-  },
-];
+

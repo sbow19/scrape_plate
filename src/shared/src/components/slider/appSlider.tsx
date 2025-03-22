@@ -4,7 +4,7 @@
 import * as styles from "./appSlider.module.css"
 import { useState } from "react";
 
-export const ButtonSlider = ({
+export const ButtonSlider: React.FC<ButtonSliderProps> = ({
     selectorData
 })=>{
 
@@ -29,6 +29,7 @@ export const ButtonSlider = ({
                             setSelectedIndex(index)
                         }}
                     >
+                        {/* Selector group title */}
                         {selectorData[0]}
                     </div>
                     )
@@ -51,13 +52,18 @@ export const ButtonSlider = ({
         >
             {
                 selectorData.map((selectorData, index)=>{
+                    const buttonArray = selectorData[1]
                     return(
                     <div
                         className={styles.button_container_inner}
                         key={index}
                     >
-                        {selectorData[1][0]}
-                        {selectorData[1][1]}
+
+                        {
+                            buttonArray.map((button)=>{
+                                return button
+                            })
+                        }
 
                     </div>
                     )
