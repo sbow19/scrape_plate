@@ -20,6 +20,8 @@ tbody tr {
   font-size: 0.7rem;
 }
 
+
+
 tbody {
   position: relative;
   overflow-y: scroll;
@@ -31,6 +33,8 @@ td {
   text-align: center;
   height: 50px;
 }
+
+
 
 .options_container {
     display: flex;

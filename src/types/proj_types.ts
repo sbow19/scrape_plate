@@ -351,6 +351,7 @@ declare global {
       content: any
     )=>void 
     read: ()=>Schema | Capture
+    reset: ()=>void
   }
 }
 

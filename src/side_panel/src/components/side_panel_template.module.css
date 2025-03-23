@@ -35,8 +35,8 @@
 .popup_content_container {
     /*Style*/
     width: 100%;
-    height: 550px;
-    padding: 5px 20px;
+    height: 100%;
+    padding: 5px 10px;
     padding-top: 20%;
     background-color: var(--primary);
     pointer-events: all;

@@ -1,0 +1,17 @@
+.content_line {
+  padding-left: 20px;
+  display: flex;
+  width: 100%;
+  column-gap: 10px;
+}
+
+input {
+  background-color: var(--primary);
+  outline: none;
+  max-width: 50%;
+}
+
+.table_header_container {
+    margin: 0 auto;
+  }
+  

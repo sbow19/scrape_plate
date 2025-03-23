@@ -64,13 +64,8 @@ export const SidePanelTemplate: React.FC = ({
 
             {children}
           </div>
-          <div className={styles.popup_footer_container}>
-            <div className={styles.secondary_action_container}>
-              {/* Actions related to main content */}
-
-              {secondaryActions}
-            </div>
-          </div>
+          
+          
         </div>
 
         {/* Toast */}

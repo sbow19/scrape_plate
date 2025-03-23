@@ -1,6 +1,6 @@
 .toast_container  {
-    height: 550px;
-    width: 375px;
+    height: 100%;
+    width: 100%;
     position: absolute;
     top: 0px;
     left: 0px;

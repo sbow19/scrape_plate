@@ -17,9 +17,13 @@ export const useModel = (
     throw new Error("Incorrect model type for useModel hook");
   }
 
-  /* CREATE BLANK MODEL */
+  // Keep ref to original model for reset
+  const originalModel = useRef(null)
+  
+  
+  /* CREATE BLANK MODEL OR COPY OF EXISITNG MODEL */
   const [model, setModel] = useState(
-    existingModel ? existingModel : { ...modelObject[modelType] }
+    existingModel ? JSON.parse(JSON.stringify(existingModel)) : { ...modelObject[modelType] }
   );
 
   const modelKeys = useMemo(() => {
@@ -29,8 +33,12 @@ export const useModel = (
   const initialsedRef = useRef(false);
   const reducerObjectRef = useRef<ReducerObject>({});
 
+
   if (!initialsedRef.current) {
     initialsedRef.current = true;
+
+    // Deeply clone the existing model
+    originalModel.current = JSON.parse(JSON.stringify(existingModel))
 
     reducerObjectRef.current = {
       modelKeys,
@@ -74,6 +82,9 @@ export const useModel = (
           [key]: content,
         }));
       },
+      reset() {
+        setModel(JSON.parse(JSON.stringify(originalModel.current)))
+      }
     };
   }
 

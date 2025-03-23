@@ -1,4 +1,4 @@
-import styles from './appIcons.module.css'
+import styles from "./appIcons.module.css";
 
 export const ExitButton: React.FC<IconProps> = ({
   height,
@@ -7,13 +7,10 @@ export const ExitButton: React.FC<IconProps> = ({
   pathFill,
   svgFill,
   strokeColor,
-  title
+  title,
 }) => {
   return (
-    <ButtonWrapper 
-      onClick={onClick}
-      title={title}  
-    >
+    <ButtonWrapper onClick={onClick} title={title}>
       <svg
         aria-hidden="true"
         xmlns="http://www.w3.org/2000/svg"
@@ -42,7 +39,7 @@ export const BackButton: React.FC<IconProps> = ({
   svgFill,
   pathFill,
   strokeColor,
-  title
+  title,
 }) => {
   return (
     <ButtonWrapper onClick={onClick} title={title}>
@@ -74,7 +71,7 @@ export const HomeButton: React.FC<IconProps> = ({
   svgFill,
   strokeColor,
   pathFill,
-  title
+  title,
 }) => {
   return (
     <ButtonWrapper onClick={onClick} title={title}>
@@ -106,7 +103,7 @@ export const EditButton: React.FC<IconProps> = ({
   strokeColor,
   svgFill,
   pathFill,
-  title
+  title,
 }) => {
   return (
     <ButtonWrapper onClick={onClick} title={title}>
@@ -135,7 +132,7 @@ export const ScrapeButton: React.FC<IconProps> = ({
   height,
   width,
   onClick,
-  title
+  title,
 }) => {
   return (
     <ButtonWrapper onClick={onClick} title={title}>
@@ -152,9 +149,7 @@ export const ScrapeButton: React.FC<IconProps> = ({
           strokeLinejoin="round"
         ></g>
         <g id="SVGRepo_iconCarrier">
-          
           <g id="scraper" transform="translate(-421.662 -997.216)">
-            
             <path
               id="Path_105"
               d="M567.7,1015.657a4,4,0,1,0,5.656,0A4,4,0,0,0,567.7,1015.657Z"
@@ -177,7 +172,7 @@ export const DeleteButton: React.FC<IconProps> = ({
   svgFill,
   pathFill,
   strokeColor,
-  title
+  title,
 }) => {
   return (
     <ButtonWrapper onClick={onClick} title={title}>
@@ -202,6 +197,38 @@ export const DeleteButton: React.FC<IconProps> = ({
   );
 };
 
+export const AddButton: React.FC<IconProps> = ({
+  height,
+  width,
+  onClick,
+  svgFill,
+  pathFill,
+  strokeColor,
+  title,
+}) => {
+  return (
+    <ButtonWrapper onClick={onClick} title={title}>
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width={width}
+        height={height}
+        fill={svgFill}
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke={strokeColor}
+          fill={pathFill}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+          d="M5 12h14m-7 7V5"
+          
+        />
+      </svg>
+    </ButtonWrapper>
+  );
+};
+
 export const SeeButton: React.FC<IconProps> = ({
   height,
   width,
@@ -209,7 +236,7 @@ export const SeeButton: React.FC<IconProps> = ({
   pathFill,
   svgFill,
   strokeColor,
-  title
+  title,
 }) => {
   return (
     <ButtonWrapper onClick={onClick} title={title}>
@@ -235,23 +262,21 @@ export const SeeButton: React.FC<IconProps> = ({
 };
 
 /**
- *  Button wrapper for app icons 
+ *  Button wrapper for app icons
  */
 const ButtonWrapper: React.FC<ButtonWrapperProps> = ({
   children,
   onClick,
   buttonStyle,
-  title
-})=>{
-
+  title,
+}) => {
   return (
-  <button
-    onClick={onClick}
-    className={buttonStyle ? buttonStyle : styles.icon_button}
-    title={title}
-  >
-    {children}
-  
-  </button>)
-
-}
+    <button
+      onClick={onClick}
+      className={buttonStyle ? buttonStyle : styles.icon_button}
+      title={title}
+    >
+      {children}
+    </button>
+  );
+};

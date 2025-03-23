@@ -18,8 +18,8 @@ export const App = () => {
     >
       <SidePanelTemplate>
         <SchemaFormTemplate
-          modelType="capture"
-          operation="edit_capture"
+          modelType="schema"
+          operation="edit_schema"
         />
       </SidePanelTemplate>
     </div>
