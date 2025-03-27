@@ -2,7 +2,7 @@
  * Schema search page
  */
 import { AppButtonTemplate } from "../../../shared/src/components/buttons/appButton";
-import { AppTableTemplate } from "../../../shared/src/components/table/appTable";
+import { AppTableTemplate } from "../components/table/appTable";
 import { tableDataConverter } from "../../../shared/src/utils/helpers";
 import { PopupTemplate } from "../components/popup_template";
 import { useCallback, useContext, useMemo, useRef, useState } from "react";
@@ -207,7 +207,7 @@ const PrimaryAction = () => {
         height={30}
         width={30}
         onClick={() => {
-          navigate("/");
+          navigate("/action/index.html");
         }}
         title='Home'
       />

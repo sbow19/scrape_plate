@@ -11,7 +11,8 @@ import { useMemo, useRef, useState } from "react";
  */
 export const useModel = (
   modelType: ModelTypes,
-  existingModel?: Schema | Capture
+  existingModel?: Schema | Capture | Schema[],
+  currentURL?: string
 ): [Schema | Capture, ReducerObject] => {
   if (!["schema", "capture"].includes(modelType)) {
     throw new Error("Incorrect model type for useModel hook");
@@ -37,8 +38,11 @@ export const useModel = (
   if (!initialsedRef.current) {
     initialsedRef.current = true;
 
+
+
     // Deeply clone the existing model
-    originalModel.current = JSON.parse(JSON.stringify(existingModel))
+    originalModel.current = JSON.parse(JSON.stringify(existingModel ?? { ...modelObject[modelType] }))
+
 
     reducerObjectRef.current = {
       modelKeys,
@@ -83,6 +87,8 @@ export const useModel = (
         }));
       },
       reset() {
+        console.log(originalModel.current)
+
         setModel(JSON.parse(JSON.stringify(originalModel.current)))
       }
     };

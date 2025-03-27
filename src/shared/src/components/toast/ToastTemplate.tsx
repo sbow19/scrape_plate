@@ -2,7 +2,7 @@ import * as styles from "./Toast.module.css";
 
 export const ToastTemplate: React.FC<ToastProps> = ({
     toastState,
-    setToastState
+    setToastState,
 }) => {
 
   /* AUTOMATICALLY CLOSE */
@@ -11,6 +11,10 @@ export const ToastTemplate: React.FC<ToastProps> = ({
       setToastState({
         open: false
       })
+
+      if(toastState.timerCallback){
+        toastState.timerCallback()
+      }
     }, toastState.timer)
   }
   return (

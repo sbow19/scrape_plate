@@ -29,11 +29,12 @@ declare global {
     name: string | null;
     url_match: string; // Schemas must match a specific url pattern
     schema: {
-      [key: string]: SchemaEntry; // Key must be name of the key
+      [key: string]: SchemaEntry; // Key represents the id of the schema entry
     };
   };
 
   type SchemaEntry = {
+    id: string      
     key: {
       match_expression: string | null; // Represents match term
       match_type: MatchMethod; // Represents the methods for determining the key value, which can be done manually
@@ -54,7 +55,7 @@ declare global {
     last_edited: string;
     id: ProjectId; ///uuid.v4()
     captures: {
-      [key: string]: Capture; // keys represent either date taken with url, or a given name
+      [key: string]: Capture; // Keys are the ids of the capture
     };
   };
 
@@ -67,7 +68,7 @@ declare global {
     url_match: string;
     name: string;
     capture_body: {
-      [key: string]: SchemaEntry; // Key represents the key value of the entry
+      [key: string]: SchemaEntry; // Key represents the id of the capture body
     };
   };
   type SchemaId = string;
@@ -75,7 +76,7 @@ declare global {
 
   // Options
   type SearchOptions = {
-    type: string;
+    type: 'project' | "schema" | "capture";
     term: string;
   };
 
@@ -118,12 +119,18 @@ declare global {
      * Specify the page to display -- view/edit, create schema, capture
      */
     openSidePanel: {
-      method: "view_edit" | "create_schema" | "capture_body";
+      method: "edit_schema" | "create_schema" | "edit_capture";
       schema: Schema | Array<Schema>; // Matching schema or schemas
     };
+
+    getCurrentTab: chrome.tabs.Tab
   };
 
   type BackendResponse =
+    | {
+      operation: 'getCurrentTab'
+      data: BackendResponseOptions['getCurrentTab']
+    }
     | {
         operation: "database";
         data: BackendResponseOptions["data"];
@@ -139,8 +146,9 @@ declare global {
   type BackendMessageOptions = {
     data: CRUDDataOptions;
     openSidePanel: {
-      method: "view_edit" | "create_schema" | "capture_body";
-      schema: Schema | Schema[];
+      method: "edit_schema" | "create_schema" | "edit_capture";
+      schema: Schema | Schema[] | null | Capture;
+      tab?: chrome.tabs.Tab
     };
     otherOperation: {
       otherField: string;
@@ -149,6 +157,7 @@ declare global {
   };
 
   type BackendMessage =
+    | { operation: 'getCurrentTab'; data: ''}
     | { operation: "database"; data: BackendMessageOptions["data"] }
     | {
         operation: "openSidePanel";
@@ -257,6 +266,7 @@ declare global {
   type AppTableProps = {
     tableData: TableData | null;
     options: TableOptions;
+    resetTableData: React.Dispatch<React.SetStateAction<boolean>>
   };
 
   type ToastProps = {
@@ -284,7 +294,8 @@ declare global {
   type SchemaFormTemplateProps = {
     modelType: ModelTypes
     operation: 'create_schema' | 'edit_schema' | 'edit_capture'
-    model?: Schema | Capture
+    model: Schema | Schema[] | Capture | null
+    currentURL: string
   }
 
   type SchemaFormProps = {
@@ -309,6 +320,7 @@ declare global {
   type TableOptions = {
     enableDelete: boolean;
     enableEdit: boolean;
+    enableSet: boolean;         // Set whether project is current project
     enableInLineEdit: boolean;
     dataType: DBOperationDataType;
   };
@@ -327,6 +339,7 @@ declare global {
     text?: React.ReactNode;
     buttons?: Array<React.ReactNode>;
     timer?: number;
+    timerCallback?: ()=>void
   };
 
   /**

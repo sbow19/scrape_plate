@@ -53,10 +53,11 @@ export const CaptureTable: React.FC<SchemaFormTableProps> = ({
             <td>Value</td>
           </thead>
           <tbody>
-            {Object.entries(formModel[objectType]).map((entry, index) => {
+            {Object.values(formModel[objectType]).map((entry) => {
               return (
                 <TableRowTemplate
                   entry={entry}
+                  index={entry.id}
                   handleChange={handleChange}
                   handleDelete={handleDelete}
                   operation={operation}
@@ -70,18 +71,18 @@ export const CaptureTable: React.FC<SchemaFormTableProps> = ({
   );
 };
 
-const TableRowTemplate = ({ operation, handleChange, handleDelete, entry }) => {
+const TableRowTemplate = ({ operation, handleChange, handleDelete, entry, index }) => {
   const [, setToastState] = useContext(ToastContext);
 
   const keyRef = useRef<HTMLInputElement>(null);
   const valueRef = useRef<HTMLInputElement>(null);
   return (
-    <tr>
+    <tr key={index}>
       <td>
         <input
           ref={keyRef}
           type="text"
-          value={entry[1].key.matched_value}
+          value={entry.key.matched_value}
           maxLength={20}
           readOnly
         />
@@ -90,21 +91,16 @@ const TableRowTemplate = ({ operation, handleChange, handleDelete, entry }) => {
         <input
           ref={valueRef}
           type="text"
-          value={entry[1].value.matched_value}
+          value={entry.value.matched_value}
           maxLength={20}
-          readOnly
-          onBlur={() => {
-            valueRef.current.readOnly = true;
-          }}
           onChange={(e) => {
-            handleChange(e.target.value, entry[0], "value", "matched_value");
+            handleChange(e.target.value, entry.id);
           }}
         />
         <EditButton
           height={20}
           width={20}
           onClick={() => {
-            valueRef.current.readOnly = false;
             valueRef.current.focus();
           }}
         />
@@ -116,7 +112,7 @@ const TableRowTemplate = ({ operation, handleChange, handleDelete, entry }) => {
           onClick={() => {
             setToastState({
               open: true,
-              text: <p>Are you sure you want to delete {entry[0]}?</p>,
+              text: <p>Are you sure you want to delete {entry.key.matched_value}?</p>,
               buttons: [
                 <AppButtonTemplate
                   onClick={() => {
@@ -129,7 +125,7 @@ const TableRowTemplate = ({ operation, handleChange, handleDelete, entry }) => {
                 </AppButtonTemplate>,
                 <AppButtonTemplate
                   onClick={() => {
-                    handleDelete(entry[0]);
+                    handleDelete(entry.id);
                     setToastState({
                       open: false,
                     });

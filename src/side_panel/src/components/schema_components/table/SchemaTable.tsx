@@ -8,17 +8,6 @@ import * as styles from "./SchemaTable.module.css";
 import { AppDropdown } from "../../../../../shared/src/components/dropdownSelector/AppDropdown";
 import { AppButtonTemplate } from "../../../../../shared/src/components/buttons/appButton";
 
-// h
-const handleKeyChange = (
-  matchExpression: string,
-  matchType: "id" | "css selector" | "regex" | "manual"
-): Promise<string> => {
-  //
-  return new Promise((resolve, reject) => {
-    // Check if manual match expression collides with existing key
-  });
-};
-
 /**
  * Generic helper function to fetch matching elements from the DOM
  * @param value
@@ -31,7 +20,7 @@ const fetchValue = (
 ): Promise<string> => {
   return new Promise((resolve, reject) => {
     // Must message service worker to trigger a content script to obtain the request value
-    resolve("hello");
+    resolve("No Match");
   });
 };
 
@@ -39,8 +28,11 @@ const fetchValue = (
  * When keys are deleted, updated or added, call the modelREducerObject
  * update function with all the keys stored in the Schema Form Table.
  *
- * Each row contains state related to an individual item. oChanges to these items will
- * call an update for the global  modelReducerObject
+ * Each row contains state related to an individual item. Changes to these items will
+ * call an update for the global  modelReducerObject.
+ * 
+ * When the user saves changes, the current schema object in the Table will  be taken 
+ * and used to update the User Content Model as a batch.
  */
 export const SchemaTable: React.FC<SchemaFormTableProps> = ({
   operation,
@@ -54,12 +46,14 @@ export const SchemaTable: React.FC<SchemaFormTableProps> = ({
   const [, setToastState] = useContext(ToastContext);
 
   /**
-   * Changing and adding schema values requires dyanmic updates to the model,
-   * as changes to matching expression will trigger dynamic updates of matched_values
+   * Changing content of the schema model in the component will cause continous
+   * fetches from the DOM and internal state updates. Therefore we throttle the 
+   * amount of requqests for updates by keeping track of a  set timeout callback.
    *
    */
   const fetchTimerRef = useRef(null);
   const fetchInProgressRef = useRef(false);
+
 
   const handleChange = (
     inputRef: React.Ref<HTMLInputElement>,
@@ -70,33 +64,53 @@ export const SchemaTable: React.FC<SchemaFormTableProps> = ({
   ): Promise<void> => {
     return new Promise((resolve, reject) => {
       // STEP 1: Check if fetch operation already taking place - override using setTimeout
+      if (fetchInProgressRef.current) {
+        resolve();
+        return;
+      }
       clearTimeout(fetchTimerRef.current);
 
+      // RESET INPUT RE STYLE
+      inputRef.current.style.border = "";
+      inputRef.current.style.color = "white";
+      inputRef.current.style.innerText = "";
+
+      // STEP 2: set delay for DOM value fetch, async operation
       fetchTimerRef.current = setTimeout(() => {
+        // Stop further requests while fetching data
         fetchInProgressRef.current = true;
 
-        // If match expression is edited, then use that, else use expression in model
+        // If match expression is edited, then use that, else use expression in form model
         const matchExpression =
           matchProperty === "match_expression"
             ? value
             : formModel[objectType][key][valueEdited]["match_expression"];
 
-
+        // And vice-versa
         const matchType =
           matchProperty === "match_type"
             ? value
             : formModel[objectType][key][valueEdited]["match_type"];
 
+        // STEP 3: Validate the matched value for key and values
         if (valueEdited == "key") {
-          handleKeyChange(matchExpression, matchType)
-            .then(() => {})
-            .catch(() => {});
-        } else {
+          // Check manual key/matched value generation
+          if (matchType === "manual") {
+            formModel[objectType][key][valueEdited]["match_expression"] =
+              matchExpression;
+            formModel[objectType][key][valueEdited]["match_type"] = matchType;
+            formModel[objectType][key][valueEdited]["matched_value"] = value;
+            modelReducerObject.update(objectType, formModel[objectType]);
+            fetchInProgressRef.current = false;
+            resolve();
+            return;
+          }
+
+          // Fetch DOM content with Promise
           fetchValue(matchExpression, matchType)
             .then((newValue) => {
-              // Validation
-
               // Update model
+
               formModel[objectType][key][valueEdited]["match_expression"] =
                 matchExpression;
               formModel[objectType][key][valueEdited]["match_type"] = matchType;
@@ -107,19 +121,43 @@ export const SchemaTable: React.FC<SchemaFormTableProps> = ({
               resolve();
             })
             .catch(() => {
+              // Change style
+              inputRef.current.style.border = "1px solid red";
+              inputRef.current.style.color = "red";
+              inputRef.current.innerText = "Error Fetching Value";
+
+              reject();
+            })
+            .finally(() => {
+              fetchInProgressRef.current = false;
+            });
+        } else if (valueEdited === "value") {
+          fetchValue(matchExpression, matchType)
+            .then((newValue) => {
+              // Validation
 
               formModel[objectType][key][valueEdited]["match_expression"] =
                 matchExpression;
               formModel[objectType][key][valueEdited]["match_type"] = matchType;
               formModel[objectType][key][valueEdited]["matched_value"] =
-                "ERROR";
-
+                newValue;
               modelReducerObject.update(objectType, formModel[objectType]);
 
+              resolve();
+            })
+            .catch(() => {
+              // Change style
+              inputRef.current.style.border = "1px solid red";
+              inputRef.current.style.color = "red";
+              inputRef.current.innerText = "Error fetching value";
+
               reject();
+            })
+            .finally(() => {
+              fetchInProgressRef.current = false;
             });
         }
-      }, 100);
+      }, 50);
     });
   };
 
@@ -127,6 +165,7 @@ export const SchemaTable: React.FC<SchemaFormTableProps> = ({
    * Delete row, schemEntry
    */
   const handleDelete = (key: string) => {
+
     // Key is the entry, vaue edited is either schema key or schema  value, match property is instantiated values for each key
     delete formModel[objectType][key];
 
@@ -136,9 +175,15 @@ export const SchemaTable: React.FC<SchemaFormTableProps> = ({
 
   const handleAdd = () => {
     // Empty entry
-    if (formModel[objectType]["empty"]) return;
+    let newId = crypto.randomUUID();
 
-    formModel[objectType]["empty"] = {
+    // Check if id already exists
+    while (formModel[objectType][newId]) {
+      newId = crypto.randomUUID();
+    }
+
+    formModel[objectType][newId] = {
+      id: newId,
       key: {
         match_expression: "",
         match_type: "manual",
@@ -164,9 +209,10 @@ export const SchemaTable: React.FC<SchemaFormTableProps> = ({
             <td>Value</td>
           </thead>
           <tbody className={styles.table_body}>
-            {Object.entries(formModel[objectType]).map((entry, index) => {
+            {Object.values(formModel[objectType]).map((entry) => {
               return (
                 <TableRowTemplate
+                  index={entry.id}
                   entry={entry}
                   handleChange={handleChange}
                   handleDelete={handleDelete}
@@ -192,29 +238,38 @@ export const SchemaTable: React.FC<SchemaFormTableProps> = ({
   );
 };
 
-const TableRowTemplate = ({ operation, handleChange, handleDelete, entry }) => {
+const TableRowTemplate = ({
+  operation,
+  handleChange,
+  handleDelete,
+  entry,
+  index,
+}) => {
   const [, setToastState] = useContext(ToastContext);
 
+  // Match expression input element
   const keyRef = useRef(null);
   const valueRef = useRef(null);
 
+  // Returned value from  match
   const matchedKeyRef = useRef(null);
   const matchedValueRef = useRef(null);
 
+
   return (
-    <tr className={styles.schema_row_container}>
+    <tr className={styles.schema_row_container} key={index}>
       <td className={styles.schema_key_container}>
         <div className={styles.match_expression_container}>
           <input
             ref={keyRef}
             type="text"
-            value={entry[1].key.match_expression}
+            value={entry.key.match_expression}
             maxLength={20}
             onChange={(e) => {
               handleChange(
-                keyRef,
+                matchedKeyRef,
                 e.target.value,
-                entry[0],
+                entry.id,
                 "key",
                 "match_expression"
               );
@@ -222,16 +277,22 @@ const TableRowTemplate = ({ operation, handleChange, handleDelete, entry }) => {
           />
           <AppDropdown
             options={["manual", "id", "css selector", "regex"]}
-            set={entry[1].key.match_type}
+            set={entry.key.match_type}
             onChange={(e) => {
-              handleChange(e.target.value, entry[0], "key", "match_type");
+              handleChange(
+                matchedKeyRef,
+                e.target.value,
+                entry.id,
+                "key",
+                "match_type"
+              );
             }}
           ></AppDropdown>
         </div>
         <div>
           e.g.:
           <p className={styles.example_match_container} ref={matchedKeyRef}>
-            {entry[1].key.matched_value}
+            {entry.key.matched_value}
           </p>
         </div>
       </td>
@@ -240,14 +301,14 @@ const TableRowTemplate = ({ operation, handleChange, handleDelete, entry }) => {
           <input
             ref={valueRef}
             type="text"
-            value={entry[1].value.match_expression}
+            value={entry.value.match_expression}
             maxLength={20}
             onChange={(e) => {
               /* Returns a promise */
               handleChange(
                 valueRef,
                 e.target.value,
-                entry[0],
+                entry.id,
                 "value",
                 "match_expression"
               );
@@ -255,9 +316,15 @@ const TableRowTemplate = ({ operation, handleChange, handleDelete, entry }) => {
           />
           <AppDropdown
             options={["id", "css selector", "regex"]}
-            set={entry[1].value.match_type}
+            set={entry.value.match_type}
             onChange={(e) => {
-              handleChange(valueRef, e.target.value, entry[0], "value", "match_type");
+              handleChange(
+                valueRef,
+                e.target.value,
+                entry.id,
+                "value",
+                "match_type"
+              );
             }}
           ></AppDropdown>
         </div>
@@ -265,7 +332,7 @@ const TableRowTemplate = ({ operation, handleChange, handleDelete, entry }) => {
           {/* Example match, but is not saved to schema */}
           e.g.:
           <p className={styles.example_match_container} ref={matchedValueRef}>
-            {entry[1].value.matched_value}
+            {entry.value.matched_value}
           </p>
         </div>
       </td>
@@ -289,7 +356,7 @@ const TableRowTemplate = ({ operation, handleChange, handleDelete, entry }) => {
                 </AppButtonTemplate>,
                 <AppButtonTemplate
                   onClick={() => {
-                    handleDelete(entry[0]);
+                    handleDelete(entry.id);
                     setToastState({
                       open: false,
                     });

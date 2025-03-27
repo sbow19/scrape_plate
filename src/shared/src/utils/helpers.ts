@@ -203,6 +203,10 @@ export function validateSchemaEntry(entryToValidate: SchemaEntry) {
   const matched_types = ["id", "css selector", "manual", "regex "];
   const valid_value_types = ["string", "object"];
 
+  if(!entryToValidate.id){
+    throw new TypeError("Schema must contain an id")
+  }
+
   if (typeof entryToValidate !== "object")
     throw new TypeError("Schema not an object");
 
@@ -276,7 +280,7 @@ export function validateCRUDOptions(options: CRUDDataOptions): void {
   const { type, method, data } = options;
 
   // Check data type
-  const dataTypes = ["project", "schema", "capture"];
+  const dataTypes = ["project", "schema", "capture", "details"];
   if (typeof type !== "string" || !dataTypes.includes(type))
     throw new TypeError("CRUD operation data type value incorrect");
 
@@ -420,7 +424,60 @@ export function convertISOToDate(date: string):string | null {
 
   if(!date) return null 
   const newDate = new Date(date)
-  return `${newDate.getDay() + 1} ${monthMatch[newDate.getMonth()]} ${newDate.getFullYear()}`
+  return `${newDate.getDate()} ${monthMatch[newDate.getMonth()]} ${newDate.getFullYear()}`
+}
+
+/**
+ * Experimental. Recusively go through object
+ * @param targObj 
+ */
+export function deepClone(targObj: object | null, resultObj: object): object | null {
+
+  if(targObj === null) return null
+
+  Object.entries(targObj).forEach((entry)=>{
+
+    // Set key on result Obj
+    resultObj[entry[0]] = null
+    const value = entry[1]
+
+
+
+    if(value !== null && typeof value === 'object' && !Array.isArray(value)){
+      resultObj[entry[0]] = {}
+      deepClone(value, resultObj[entry[0]])
+    } 
+    
+    else if (Array.isArray(value)){
+      resultObj[entry[0]] = [];
+
+      arrayClone(value, resultObj[entry[0]])
+      
+    } else {
+      
+      resultObj[entry[0]] = entry[1]
+    }
+  })
+  return resultObj
+}
+
+function arrayClone(arr: any[], resAr: any[]){
+
+  arr.forEach((val)=>{
+    if(Array.isArray(val)){
+      const newAr: any[] = []
+      arrayClone(val, newAr)
+      resAr.push(newAr)
+    } else if (val !== null && typeof val === 'object'){
+      const newObj = {}
+      deepClone(val, newObj)
+      resAr.push(newObj)
+    } else {
+      resAr.push(val)
+    }
+  })
+
+  return resAr
 }
 
 const monthMatch: {

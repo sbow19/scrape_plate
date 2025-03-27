@@ -1,11 +1,11 @@
 /**
  * Helper functions
  */
+
 export function backendResponseFactory(
   message: BackendMessage,
   data: any
 ): BackendResponse {
-  // IMPLEMENT: parse message
   const responseBody: BackendResponse = {};
 
   if (message.operation === "database") {
@@ -20,7 +20,15 @@ export function backendResponseFactory(
       payload: databaseResult?.data ?? null,
       message: databaseResult.message,
     };
+
+  } else if (message.operation === 'getCurrentTab'){
+    responseBody.operation === 'getCurrentTab'
+
+    const tabResult = data as chrome.tabs.Tab
+
+    responseBody.data = tabResult
   }
+
   return responseBody;
 }
 

@@ -8,8 +8,8 @@ import {
 } from "../../../shared/src/assets/icons/appIcons";
 import { AppButtonTemplate } from "../../../shared/src/components/buttons/appButton";
 import * as styles from "./projectView.module.css";
-import { AppTableTemplate } from "../../../shared/src/components/table/appTable";
-import { useCallback, useContext, useMemo, useRef, useState } from "react";
+import { AppTableTemplate } from "../components/table/appTable";
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import {
   tableDataConverter,
   convertISOToDate,
@@ -18,16 +18,37 @@ import {
 import { useNavigate, useParams } from "react-router";
 import ToastContext from "../context/Toast";
 import { AppDropdown } from "../../../shared/src/components/dropdownSelector/AppDropdown";
+import useContent from "../../../shared/src/hooks/useContent";
 
 export const ProjectView: React.FC = () => {
-  /* GET PROJECT DETAILS */
+
+  // Project id passed via url param
   const params = useParams();
+  const userContentEvent = useContent()
+  
+  // Set local version of project details
+  const [projectDetails, setProjectDetails] = useState({})
+
+  useEffect(()=>{
+    userContentEvent?.emit('search', {
+      type: 'project',
+      term: params.projectId
+    })
+    .then((results: Array<ProjectGroup>)=>{
+      if(results.length === 1){
+        setProjectDetails(results[0])
+      }
+    })
+    .catch((e)=>{
+      console.log(e)
+    })
+  }, [])
 
   return (
     <>
       <PopupTemplate
-        contentComponent={<ContentComponent projectDetails={{}} />}
-        secondaryActions={<SecondaryActions projectDetails={{}} />}
+        contentComponent={<ContentComponent projectDetails={projectDetails} setProjectDetails={setProjectDetails}/>}
+        secondaryActions={<SecondaryActions projectDetails={projectDetails} />}
         primaryAction={<PrimaryAction />}
         backButtonEnabled={true}
       />
@@ -35,25 +56,24 @@ export const ProjectView: React.FC = () => {
   );
 };
 
-const ContentComponent = ({ projectDetails }) => {
+const ContentComponent = ({ projectDetails, setProjectDetails }) => {
+
   const inputRef = useRef<HTMLInputElement>(null);
   const handleFocus = useCallback(() => {
     if (inputRef.current) {
-      inputRef.current.readOnly = false;
       inputRef.current.focus();
-    }
-  }, []);
-  const handleBlur = useCallback(() => {
-    if (inputRef.current) {
-      inputRef.current.readOnly = true;
     }
   }, []);
 
   // Input value
-  const [currentName, setCurrentName] = useState(projectDetails.name);
-  const handleChangeText = useCallback((e) => {
-    setCurrentName(e.value);
-  }, []);
+  const handleChangeText = (e) => {
+    setProjectDetails(prev=>{
+      return {
+        ...projectDetails,
+        name: e.target.value
+      }
+    });
+  }
 
   /**
    * Convert capture details to form usable by table template, i.e. table data type
@@ -75,16 +95,16 @@ const ContentComponent = ({ projectDetails }) => {
             <input
               ref={inputRef}
               type="text"
-              value={currentName}
+              value={projectDetails.name}
               className={styles.input_field}
-              readOnly
-              onBlur={handleBlur}
               onChange={handleChangeText}
             />
           </h3>
           <EditButton
             height={20}
             width={20}
+            strokeColor="black"
+            pathFill="none"
             onClick={handleFocus}
             title="Edit Name"
           />
@@ -105,6 +125,7 @@ const ContentComponent = ({ projectDetails }) => {
           options={{
             enableEdit: true,
             enableDelete: true,
+            enableSet: false,
             enableInLineEdit: false,
             dataType: "capture",
           }}
@@ -116,6 +137,8 @@ const ContentComponent = ({ projectDetails }) => {
 
 const SecondaryActions = ({ projectDetails }) => {
   const [toastState, setToastState] = useContext(ToastContext);
+  const userContentEvents = useContent()
+  const navigate = useNavigate()
   /**
    * Delete project toast trigger handler
    */
@@ -137,10 +160,34 @@ const SecondaryActions = ({ projectDetails }) => {
         </AppButtonTemplate>,
         <AppButtonTemplate
           onClick={() => {
-            /* IMPLEMENT: trigger delete */
-            setToastState({
-              open: false,
-            });
+            userContentEvents?.emit('delete', {
+              method: 'delete',
+              type: 'project',
+              data: projectDetails.id
+            })
+            .then((be: BackendResponse)=>{
+              if(be.data.success){
+                setToastState(
+                  {
+                    open: true,
+                    timer: 1000,
+                    text: <p>Deleted project successfully</p>
+                  }
+                )
+              } else {
+                throw be
+              }
+              navigate(-1)
+            })
+            .catch((e)=>{
+              setToastState(
+                {
+                  open: true,
+                  timer: 1000,
+                  text: <p>Error: failed to delete project.</p>
+                }
+              )
+            })
           }}
         >
           
@@ -148,7 +195,7 @@ const SecondaryActions = ({ projectDetails }) => {
         </AppButtonTemplate>,
       ],
     }));
-  }, [toastState]);
+  }, [projectDetails]);
 
   /**
    * Export project toast trigger handler
@@ -168,10 +215,15 @@ const SecondaryActions = ({ projectDetails }) => {
         >
           Back
         </AppButtonTemplate>,
-        <AppDropdown options={["json", "excel"]} data={projectDetails} />,
+        <AppDropdown 
+          options={["json"]} 
+          data={projectDetails}
+          exportButton={true}
+          set='json'
+        />,
       ],
     }));
-  }, [toastState]);
+  }, [projectDetails]);
 
   /**
    * Save project toast trigger handler
@@ -193,10 +245,33 @@ const SecondaryActions = ({ projectDetails }) => {
         </AppButtonTemplate>,
         <AppButtonTemplate
           onClick={() => {
-            /* IMPLEMENT: trigger delete */
-            setToastState({
-              open: false,
-            });
+            userContentEvents?.emit('update', {
+              method: 'update',
+              type: 'project',
+              data: projectDetails
+            })
+            .then((be: BackendResponse)=>{
+              if(be.data.success){
+                setToastState(
+                  {
+                    open: true,
+                    timer: 1000,
+                    text: <p>Updated project successfully</p>
+                  }
+                )
+              } else {
+                throw be
+              }
+            })
+            .catch((e)=>{
+              setToastState(
+                {
+                  open: true,
+                  timer: 1000,
+                  text: <p>Error: failed to update project details</p>
+                }
+              )
+            })
           }}
         >
           
@@ -204,7 +279,7 @@ const SecondaryActions = ({ projectDetails }) => {
         </AppButtonTemplate>,
       ],
     });
-  }, [toastState]);
+  }, [projectDetails]);
 
   return (
     <div className={styles.button_container}>
@@ -245,8 +320,10 @@ const PrimaryAction = () => {
       <HomeButton
         height={30}
         width={30}
+        pathFill="none"
+        strokeColor="black"
         onClick={() => {
-          navigate("/");
+          navigate("/action/index.html");
         }}
         title='Home'
       />

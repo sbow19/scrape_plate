@@ -1,6 +1,6 @@
-import { StrictMode } from "react";
+import { StrictMode, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { createBrowserRouter,  RouterProvider} from "react-router";
+import { createBrowserRouter, RouterProvider } from "react-router";
 /**
  * Global  styles
  */
@@ -14,44 +14,81 @@ import { CreateProject } from "./views/createProjectView.tsx";
 import { ProjectView } from "./views/projectView.tsx";
 import { SchemaView } from "./views/schemaView.tsx";
 import { CaptureView } from "./views/captureView.tsx";
+import TabContext from "./context/Tab.tsx";
+import UserContent from "../../shared/src/state/state.ts";
+
+UserContent.init()
+
 
 const router = createBrowserRouter([
   {
-    path: "/",
+    path: "/action/index.html",
     element: <HomeView />,
   },
   {
-    path: '/welcome',
-    element: <WelcomeView />
+    path: "/welcome",
+    element: <WelcomeView />,
   },
   {
-    path: '/project',
-    element: <ProjectListView/>
+    path: "/project",
+    element: <ProjectListView />,
   },
   {
-    path: '/project/:projectId',
-    element: <ProjectView/>
+    path: "/project/:projectId",
+    element: <ProjectView />,
   },
   {
-    path: '/capture/:captureId',
-    element: <CaptureView/>
+    path: "/capture/:captureId",
+    element: <CaptureView />,
   },
   {
-    path: '/project/create',
-    element: <CreateProject/>
+    path: "/project/create",
+    element: <CreateProject />,
   },
   {
-    path: '/schema',
-    element: <SchemaListView/>
+    path: "/schema",
+    element: <SchemaListView />,
   },
   {
-    path: '/schema/:schemaId',
-    element: <SchemaView/>
-  }
+    path: "/schema/:schemaId",
+    element: <SchemaView />,
+  },
 ]);
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-   <RouterProvider router={router} />
+    <App />
   </StrictMode>
 );
+
+function App() {
+  // Get tab information from backend
+  const [tab, setTab] = useState<chrome.tabs.Tab>(null);
+
+  const tabRef = useRef(false);
+
+
+
+  useEffect(() => {
+
+    if (!tabRef.current) {
+      chrome.runtime
+        .sendMessage({
+          operation: "getCurrentTab",
+          data: "",
+        })
+        .then((response: BackendResponse) => {
+          setTab(response.data);
+          tabRef.current  = true
+        })
+        .catch(() => {});
+    }
+  }, []);
+
+  
+  return (
+    <TabContext.Provider value={tab}>
+      <RouterProvider router={router} />
+    </TabContext.Provider>
+  );
+}

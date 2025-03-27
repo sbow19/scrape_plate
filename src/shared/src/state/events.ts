@@ -44,6 +44,7 @@ export class EventEmitter {
         try{
             potentialPromise = storedFunction.call(null, newDataRef);
         }catch(e){
+
             reject(e)
         }
         
@@ -57,6 +58,7 @@ export class EventEmitter {
           potentialPromise.then((result) => {
             resolve(result);
           }).catch((error)=>{
+            console.log("Error caught in event emitter", error)
             reject(error)
           });
         } else {

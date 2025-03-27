@@ -43,6 +43,9 @@ export const SidePanelTemplate: React.FC = ({
                 pathFill="transparent"
                 strokeColor="black"
                 svgFill="#353535ff"
+                onClick={()=>{
+                  window.close()
+                }}
               />
             </div>
           </div>

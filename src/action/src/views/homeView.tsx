@@ -3,33 +3,122 @@
  */
 import { PopupTemplate } from "../components/popup_template";
 import { ScrapeButton } from "../../../shared/src/assets/icons/appIcons";
-import { EditButton } from "../../../shared/src/assets/icons/appIcons";
+import { EditButton, AddButton } from "../../../shared/src/assets/icons/appIcons";
 import { ButtonSlider } from "../../../shared/src/components/slider/appSlider";
-import { AppTableTemplate } from "../../../shared/src/components/table/appTable";
+import { AppTableTemplate } from "../components/table/appTable";
 
 import * as styles from "./homeView.module.css";
-import { useContext, useMemo } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { tableDataConverter } from "../../../shared/src/utils/helpers";
 import { AppButtonTemplate } from "../../../shared/src/components/buttons/appButton";
 import { useNavigate } from "react-router";
 import ToastContext from "../context/Toast";
+import UserContent from "../../../shared/src/state/state";
+import useContent from "../../../shared/src/hooks/useContent";
+import { openSidePanel } from "../utils/chromeMessaging";
+import TabContext from "../context/Tab";
 
 export const HomeView = () => {
-  /*IMPLEMENT: Fetch schema matches here */
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  const userContentEvents = useContent();
+
+  if (!userContentEvents) throw new Error("Failed to get user content model");
+
+  const [matchingSchemas, setMatchingSchemas] = useState<Schema[]>([]);
+  const [currentProject, setCurrentProject] = useState<ProjectGroup>({});
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (UserContent.hasLoaded) {
+      // Fetch all user content
+      userContentEvents
+        ?.emit("getAllOf", "details")
+        .then(async (v) => {
+          if (!v.hasUsedOnce) {
+            navigate("/welcome");
+            return;
+          }
+
+          return userContentEvents.emit("search", {
+            term: v.currentProject,
+            type: "project",
+          });
+        })
+        .then((results: ProjectGroup[]) => {
+          if (results.length > 0) setCurrentProject(results[0]);
+
+          return userContentEvents.emit("getMatchingSchemas", null);
+        })
+        .then((schemaArray: Array<Schema>) => {
+          setMatchingSchemas(schemaArray);
+        })
+        .catch(() => {})
+        .finally(() => {
+          setIsLoaded(true);
+          UserContent.hasLoaded = true;
+        });
+    } else {
+      userContentEvents
+        .emit("fetch", "")
+        .then((userContentModel: UserContentModel) => {
+          if (!userContentModel.details.hasUsedOnce) {
+            navigate("/welcome");
+            return;
+          }
+
+          const searchOptions: SearchOptions = {
+            type: "project",
+            term: userContentModel.details?.currentProject ?? "",
+          };
+
+          return userContentEvents.emit("search", searchOptions);
+        })
+        .then((results: ProjectGroup[]) => {
+          if (results.length > 0) setCurrentProject(results[0]);
+
+          return userContentEvents.emit("getMatchingSchemas", null);
+        })
+        .then((schemaArray: Array<Schema>) => {
+          setMatchingSchemas(schemaArray);
+        })
+        .catch(() => {})
+        .finally(() => {
+          setIsLoaded(true);
+          UserContent.hasLoaded = true;
+        });
+    }
+  }, []);
   return (
     <>
-      <PopupTemplate
-        contentComponent={<ContentComponent matchingSchemas={[]} currentProject={{}}/>}
-        secondaryActions={<SecondaryActions />}
-        primaryAction={<PrimaryAction matchingSchemas={[]} />}
-        backButtonEnabled={false}
-      />
+      {isLoaded ? (
+        <PopupTemplate
+          contentComponent={
+            <ContentComponent
+              matchingSchemas={matchingSchemas}
+              currentProject={currentProject}
+            />
+          }
+          secondaryActions={<SecondaryActions />}
+          primaryAction={<PrimaryAction matchingSchemas={matchingSchemas} />}
+          backButtonEnabled={false}
+        />
+      ) : (
+        <PopupTemplate
+          contentComponent={<></>}
+          secondaryActions={<SecondaryActions />}
+          primaryAction={<PrimaryAction matchingSchemas={matchingSchemas} />}
+          backButtonEnabled={false}
+        />
+      )}
     </>
   );
 };
 
 const ContentComponent = ({ matchingSchemas, currentProject }) => {
   const matchingDetailsTable: TableData | null = useMemo(() => {
+    if (!matchingSchemas) return null;
     const cleanedData =
       matchingSchemas.length > 0
         ? tableDataConverter("schemaMatchList", matchingSchemas)
@@ -47,20 +136,46 @@ const ContentComponent = ({ matchingSchemas, currentProject }) => {
         <div className={styles.current_project_container}>
           <h3 className={styles.current_project_title}>Current Project</h3>
           <div className={styles.project_name_wrapper}>
-            {currentProject ? (
+            {currentProject.name ? (
               <>
-                <p>{/* Current project name */} {currentProject.name} </p>
+                <p>
+                  {/* Current project name */} {currentProject.name}{" "}
+                </p>
+                <AddButton
+                  height={20}
+                  width={20}
+                  strokeColor="black"
+                  pathFill="none"
+                  title="Change Project"
+                  onClick={() => {
+                    navigate(`/project`);
+                  }}
+                />
                 <EditButton
                   height={20}
                   width={20}
-                  title="Change Project"
+                  strokeColor="black"
+                  pathFill="none"
+                  title="Edit Project"
                   onClick={() => {
                     navigate(`/project/${currentProject.id}`);
                   }}
                 />
               </>
             ) : (
-              <>No current project</>
+              <>
+                No current project
+                <AddButton
+                  height={20}
+                  width={20}
+                  strokeColor="black"
+                  pathFill="none"
+                  title="Change Project"
+                  onClick={() => {
+                    navigate(`/project`);
+                  }}
+                />
+              </>
             )}
           </div>
         </div>
@@ -69,7 +184,7 @@ const ContentComponent = ({ matchingSchemas, currentProject }) => {
 
           {/* If no matching schemas, then display default */}
           <div className={styles.matching_schema_content_container}>
-            {matchingSchemas.length > 0 ? (
+            {matchingSchemas && matchingSchemas.length > 0 ? (
               <AppTableTemplate
                 tableData={matchingDetailsTable}
                 options={{
@@ -90,6 +205,7 @@ const ContentComponent = ({ matchingSchemas, currentProject }) => {
 };
 
 const SecondaryActions = () => {
+  const tab = useContext(TabContext);
   const navigate = useNavigate();
   const dummySelectorData: Array<[string, Array<React.ReactNode>]> = [
     [
@@ -121,7 +237,13 @@ const SecondaryActions = () => {
         >
           View
         </AppButtonTemplate>,
-        <AppButtonTemplate>Create</AppButtonTemplate>,
+        <AppButtonTemplate
+          onClick={() => {
+            openSidePanel(tab, "create_schema", "");
+          }}
+        >
+          Create
+        </AppButtonTemplate>,
       ],
     ],
   ];
@@ -141,7 +263,7 @@ const PrimaryAction = ({ matchingSchemas }) => {
         width={30}
         title="Scrape"
         onClick={() => {
-          if (matchingSchemas.length > 0) {
+          if (matchingSchemas && matchingSchemas.length > 0) {
             /* Execute scrape logic */
           } else {
             setToastState({
@@ -156,5 +278,3 @@ const PrimaryAction = ({ matchingSchemas }) => {
     </>
   );
 };
-
-

@@ -3,7 +3,7 @@
  */
 import { PopupTemplate } from "../components/popup_template";
 import { AppButtonTemplate } from "../../../shared/src/components/buttons/appButton";
-import { AppTableTemplate } from "../../../shared/src/components/table/appTable";
+import { AppTableTemplate } from "../components/table/appTable";
 import { useMemo } from "react";
 import * as styles from "./schemaListView.module.css";
 import { HomeButton } from "../../../shared/src/assets/icons/appIcons";
@@ -46,6 +46,7 @@ const ContentComponent = ({ schemaList }) => {
           options={{
             enableDelete: true,
             enableEdit: true,
+            enableSet: false,
             enableInLineEdit: false,
             dataType: "schema",
           }}
@@ -77,8 +78,10 @@ const PrimaryAction = () => {
       <HomeButton
         height={30}
         width={30}
+        strokeColor="black"
+        pathFill="none"
         onClick={() => {
-          navigate("/");
+          navigate("/action/index.html");
         }}
         title="Home"
       />

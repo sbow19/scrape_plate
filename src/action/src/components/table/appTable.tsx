@@ -4,14 +4,16 @@
 
 import { useCallback, useContext } from "react";
 import * as styles from "./appTable.module.css";
-import { EditButton, DeleteButton } from "../../assets/icons/appIcons";
+import { EditButton, DeleteButton, AddButton } from "../../../../shared/src/assets/icons/appIcons";
 import { useNavigate } from "react-router";
-import ToastContext from "../../../../action/src/context/Toast";
-import { AppButtonTemplate } from "../buttons/appButton";
+import ToastContext from "../../context/Toast";
+import { AppButtonTemplate } from "../../../../shared/src/components/buttons/appButton";
+import useContent from "../../../../shared/src/hooks/useContent";
 
 export const AppTableTemplate: React.FC<AppTableProps> = ({
   tableData,
   options,
+  resetTableData
 }) => {
   const navigate = useNavigate();
 
@@ -19,6 +21,8 @@ export const AppTableTemplate: React.FC<AppTableProps> = ({
    * TOAST OPERATIONS
    */
   const [, setToastState] = useContext(ToastContext);
+  const userContentEvents = useContent()
+
   const handleDeleteEntry = useCallback(
     (row: Array<string>) => {
       setToastState((prevState) => ({
@@ -38,9 +42,31 @@ export const AppTableTemplate: React.FC<AppTableProps> = ({
           </AppButtonTemplate>,
           <AppButtonTemplate
             onClick={() => {
-              setToastState({
-                open: false,
-              });
+
+              const deleteCrud: CRUDDataOptions = {
+                method: 'delete',
+                type: 'project',
+                data: row[0]    // Table data rows first index always includes id of row data
+              }
+              
+              userContentEvents?.emit('delete', deleteCrud)
+                .then((beResponse: BackendResponse)=>{
+                  resetTableData(prev=>!prev)
+                })
+                .catch((e)=>{
+                  setToastState({
+                    open: true,
+                    timer: 1000,
+                    text: <p>Error: failed to delete{row[1]}</p>
+                  })
+                })
+                .finally(()=>{
+                  setToastState({
+                    open: false
+                  })
+                })
+
+
             }}
           >
             {" "}
@@ -51,6 +77,40 @@ export const AppTableTemplate: React.FC<AppTableProps> = ({
     },
     [setToastState]
   );
+
+  const handleSetCurrentProject = useCallback((
+    row: Array<string>
+  )=>{
+
+    userContentEvents?.emit('getAllOf', 'details')
+    .then((userContentDetails: UserContentDetails)=>{
+
+      userContentDetails.currentProject = row[0]  // Set current project id 
+
+      return userContentEvents.emit('update', {
+        method: 'update',
+        type: 'details',
+        data: userContentDetails
+      })
+    })
+    .then((be: BackendResponse)=>{
+
+      setToastState({
+        open:true,
+        timer: 1000,
+        text: <p>Set {row[1]} as current project</p>
+      })
+    })
+    .catch((error)=>{
+
+      setToastState({
+        open:true,
+        timer: 1000,
+        text: <p>Unable to update current project</p>
+      })
+    })
+
+  }, [setToastState])
 
   return (
     <>
@@ -92,10 +152,24 @@ export const AppTableTemplate: React.FC<AppTableProps> = ({
                    */}
                   {options ? (
                     <td className={styles.options_container}>
+                      {options?.enableSet && (
+                        <AddButton
+                          height={25}
+                          width={25}
+                          strokeColor="black"
+                          
+                          onClick={() =>
+                            handleSetCurrentProject(row)
+                          }
+                          title='Set As Current Project'
+                        />
+                      )}
                       {options?.enableEdit && (
                         <EditButton
                           height={25}
                           width={25}
+                          strokeColor="black"
+                          pathFill="none"
                           onClick={() => {
                             navigate(`/${options.dataType}/${row[0]}`);
                           }}
@@ -106,6 +180,8 @@ export const AppTableTemplate: React.FC<AppTableProps> = ({
                         <DeleteButton
                           height={25}
                           width={25}
+                          strokeColor="black"
+                          pathFill="none"
                           onClick={() =>
                             handleDeleteEntry(row)
                           }

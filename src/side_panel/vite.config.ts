@@ -6,11 +6,12 @@ export default defineConfig({
   plugins: [react()],
   build: {
     // outDir: '../../public/action'
-    outDir: "./public",
+    outDir: "../../public/side_panel/",
   },
   server: {
     fs: {
       allow: [".."],
     },
   },
+  base: './'
 })

@@ -41,7 +41,10 @@ chrome.runtime.onMessage.addListener(
             message,
             dbResult
           );
+
+
           sendResponse(backendResponse);
+          
         })
         .catch((dbResult) => {
           const backendResponse: BackendResponse = backendResponseFactory(
@@ -56,6 +59,17 @@ chrome.runtime.onMessage.addListener(
   }
 );
 
+/**
+ * Listen for change tab to close the side panel
+ */
+
+chrome.tabs.onActivated.addListener(()=>{
+
+  /* switch sidepanel off and on */
+  chrome.sidePanel.setOptions({enabled: false})
+  chrome.sidePanel.setOptions({enabled: true})
+
+})
 /**
  *  Listen to change tab events to determine whether url matches a
  *  url patterns in user schemas
@@ -112,13 +126,13 @@ chrome.tabs.onActivated.addListener(() => {
       chrome.contextMenus.create({
         title: "View/edit schema",
         contexts: ["page"],
-        id: "view_edit_schema",
+        id: "edit_schema",
       });
 
       chrome.contextMenus.create({
         title: "Capture page",
         contexts: ["page"],
-        id: "capture_page",
+        id: "edit_capture",
       });
 
       // Save matching schemas in database
@@ -217,124 +231,160 @@ chrome.tabs.onActivated.addListener(() => {
   });
 });
 
-chrome.contextMenus.onClicked.addListener((clickData: chrome.contextMenus.OnClickData, tab: chrome.tabs.Tab) => {
-  switch (clickData.menuItemId) {
-    case "create_schema":
-      {
-        chrome.sidePanel
-        .open(
-          {
-            tabId: tab.id,
-          },
-          () => {
-            // Callback should run to sned data for screen
-            const sidePanelMessage: BackendResponse = {
-              operation: "openSidePanel",
-              data: {
-                method: "create",
-                schema: {
-                  name: "",
-                  id: "",
-                  url_match: tab.url,
-                  schema: {},
+chrome.contextMenus.onClicked.addListener(
+  (clickData: chrome.contextMenus.OnClickData, tab: chrome.tabs.Tab) => {
+    switch (clickData.menuItemId) {
+      case "create_schema":
+        {
+          chrome.sidePanel.open(
+            {
+              tabId: tab.id,
+            },
+            () => {
+              // Callback should run to sned data for screen
+              const sidePanelMessage: BackendResponse = {
+                operation: "openSidePanel",
+                data: {
+                  method: "create_schema",
+                  schema: {
+                    name: "",
+                    id: "",
+                    url_match: tab.url,
+                    schema: {},
+                  },
                 },
+              };
+              chrome.runtime.sendMessage(sidePanelMessage);
+            }
+          );
+        }
+        break;
+      case "edit_schema":
+        {
+          IndexedDBOperations.handleQuery({
+            type: "schemaMatches",
+            method: "read",
+          }).then((dbResult) => {
+            chrome.sidePanel.open(
+              {
+                tabId: tab.id,
               },
-            };
-            chrome.runtime.sendMessage(sidePanelMessage);
-          }
-        )
-      }
-      break;
-    case "view_edit_schema":
-      {
-        IndexedDBOperations.handleQuery(
-          {
+              () => {
+                // Callback should run to sned data for screen
+                const sidePanelMessage: BackendResponse = {
+                  operation: "openSidePanel",
+                  data: {
+                    method: "edit_schema",
+                    schema: dbResult.data["schemaMatches"],
+                  },
+                };
+                chrome.runtime.sendMessage(sidePanelMessage);
+              }
+            );
+          });
+        }
+        break;
+      case "capture_body":
+        {
+          IndexedDBOperations.handleQuery({
             type: "schemaMatches",
-            method: "read"
-          }
-        ).then((dbResult)=>{
-
-          chrome.sidePanel.open(
-            {
-              tabId: tab.id,
-            },
-            () => {
-              // Callback should run to sned data for screen
-              const sidePanelMessage: BackendResponse = {
-                operation: "openSidePanel",
-                data: {
-                  method: "view_edit",
-                  schema: dbResult.data["schemaMatches"],
-                },
-              };
-              chrome.runtime.sendMessage(sidePanelMessage);
-            }
-          );
-
-        })
-      }
-      break;
-    case "capture_body":
-      {
-        IndexedDBOperations.handleQuery(
-          {
-            type: "schemaMatches",
-            method: "read"
-          }
-        ).then((dbResult)=>{
-
-          chrome.sidePanel.open(
-            {
-              tabId: tab.id,
-            },
-            () => {
-              // Callback should run to sned data for screen
-              const sidePanelMessage: BackendResponse = {
-                operation: "openSidePanel",
-                data: {
-                  method: "capture_body",
-                  schema: dbResult.data["schemaMatches"],
-                },
-              };
-              chrome.runtime.sendMessage(sidePanelMessage);
-            }
-          );
-
-        })
-        
-      }
-      break;
+            method: "read",
+          }).then((dbResult) => {
+            chrome.sidePanel.open(
+              {
+                tabId: tab.id,
+              },
+              () => {
+                // Callback should run to sned data for screen
+                const sidePanelMessage: BackendResponse = {
+                  operation: "openSidePanel",
+                  data: {
+                    method: "edit_capture",
+                    schema: dbResult.data["schemaMatches"],
+                  },
+                };
+                chrome.runtime.sendMessage(sidePanelMessage);
+              }
+            );
+          });
+        }
+        break;
+    }
   }
-});
+);
 
 // SIDE PANEL TRIGGERS FROM POPUP
 /**
  * The side panel can also be triggered by the user firing an event
  * from the action
+ *
+ * sidePanel.open() can only be opened in response to 'user gestures'.
+ * According to Mozilla, user gestures follow a no surprises principle,
+ * such that this API can only be called in the callback for the user
+ * action. Above, the side panel is opened in the callback for context menu
+ * click, which is the callback handling the user gesture.
+ *
+ * Here, the callback handling the sidePnelopen is waiting for the resolution of a
+ * promise, getCurrentTab. This means that the user gesture handler loses it' status as such
+ *
+ * https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/User_actions
+ * https://stackoverflow.com/questions/27669590/chrome-extension-function-must-be-called-during-a-user-gesture
+ *
+ * I presume as well that sending a message via the backend is not a user gesture. We
+ * will need to migrate the sidePanel opening logic to the action. Therefore, we also
+ * need to have handy the tab information.
+ *
+ * useContext --> set Tab information every time popup is created -->  available syncrhonously to action
  */
 chrome.runtime.onMessage.addListener(
-  (message: BackendMessage, sender, senderResponse) => {
-    if (message.operation === "openSidePanel") {
-      // Open the side panel, then send a message to the extension
-      // to indicate the reason for opening the side panel
-      chrome.sidePanel.open(
-        {
-          tabId: tab.id,
-        },
-        () => {
-          // Callback should run to sned data for screen
-          const sidePanelMessage: BackendResponse = {
-            operation: "openSidePanel",
-            data: {
-              method: message.data.method,
-              schema: message.data.schema,
-            },
-          };
-          chrome.runtime.sendMessage(sidePanelMessage);
-        }
-      );
+  (message: BackendMessage, sender, sendResponse) => {
+    if (message.operation === "getCurrentTab") {
+      getCurrentTab()
+        .then((tab) => {
+          const backendResponse = backendResponseFactory(message, tab);
+
+          sendResponse(backendResponse);
+        })
+        .catch(() => {});
+      return true;
     }
   }
 );
 
-// KEY EVENT TRIGGERS
+chrome.commands.onCommand.addListener((command, tab) => {
+  switch (command) {
+    case "create_schema":
+      chrome.sidePanel.open(
+        {
+          tabId: tab?.id ?? 0,
+        },
+        () => {
+          const backgroundMessage: BackendMessage = {
+            operation: "openSidePanel",
+            data: {
+              method: "create_schema",
+              schema: null,
+              tab: tab
+            },
+          };
+
+          setTimeout(() => {
+            chrome.runtime.sendMessage(backgroundMessage);
+          }, 100);
+        }
+      );
+      break;
+    case "edit_capture":
+      chrome.sidePanel.open({
+        tabId: tab?.id ?? 0,
+      });
+      break;
+    case "edit_schema":
+      chrome.sidePanel.open({
+        tabId: tab?.id ?? 0,
+      });
+      break;
+    default:
+      break;
+  }
+});

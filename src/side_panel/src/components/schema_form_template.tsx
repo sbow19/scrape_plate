@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { useContext, useRef } from "react";
 import { useModel } from "../hooks/useModel";
 import * as styles from "./schema_form_template.module.css";
 
@@ -9,7 +9,7 @@ import { CreateSchemaHeader } from "./schema_components/header/CreateSchema";
 import { EditCaptureHeader } from "./schema_components/header/EditCapture";
 import { EditSchemaHeader } from "./schema_components/header/EditSchema";
 
-import { dummySchemaModel } from "../test/dummyData";
+// import { dummySchemaModel, dummyCaptureModel } from "../test/dummyData";
 import { SchemaTable } from "./schema_components/table/SchemaTable";
 import { CaptureTable } from "./schema_components/table/CaptureTable";
 /**
@@ -25,12 +25,14 @@ export const SchemaFormTemplate: React.FC<SchemaFormTemplateProps> = ({
   modelType,
   operation,
   model,
+  currentURL
 }) => {
   /**
    * Maintain local copy of schema or capture before updating the user content model
    * in the backend
    */
-  const [formModel, modelReducerObject] = useModel(modelType, dummySchemaModel);
+
+  const [formModel, modelReducerObject] = useModel(modelType, model);
 
   /**
    * Reset changes to existing schema or capture model
@@ -38,6 +40,7 @@ export const SchemaFormTemplate: React.FC<SchemaFormTemplateProps> = ({
   const handleReset = () => {
     modelReducerObject.reset();
   };
+
 
   const [, setToastState] = useContext(ToastContext);
 
@@ -78,6 +81,7 @@ export const SchemaFormTemplate: React.FC<SchemaFormTemplateProps> = ({
         <CreateSchemaHeader
           formModel={formModel}
           modelReducerObject={modelReducerObject}
+
         ></CreateSchemaHeader>
       );
       break;

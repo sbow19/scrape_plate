@@ -47,6 +47,9 @@ export const PopupTemplate: React.FC<PopupTemplateProps> = ({
                 pathFill="transparent"
                 strokeColor="black"
                 svgFill="#353535ff"
+                onClick={()=>{
+                  window.close()
+                }}
               />
             </div>
           </div>

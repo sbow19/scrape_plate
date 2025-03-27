@@ -2,6 +2,8 @@
  * Indexed db API
  */
 
+import { deepClone } from "../../../shared/src/utils/helpers";
+
 class IndexedDBOperations {
   private static _db: IDBDatabase | null = null;
 
@@ -17,7 +19,9 @@ class IndexedDBOperations {
         if (!db) throw new Error("DB could not be updated");
 
         // Create object stores for user content model
-        db.createObjectStore("details");
+        db.createObjectStore("details", {
+          autoIncrement: true,
+        });
 
         db.createObjectStore("projects", {
           keyPath: "id",
@@ -29,7 +33,7 @@ class IndexedDBOperations {
 
         // Only one array object lives here
         db.createObjectStore("schemaMatches", {
-          autoIncrement: true
+          autoIncrement: true,
         });
 
         resolve(
@@ -45,6 +49,25 @@ class IndexedDBOperations {
       dbRequest.onsuccess = (ev) => {
         // Save db instance to global db
         IndexedDBOperations._db = dbRequest.result;
+
+        // Add default object in details
+        const tx = IndexedDBOperations._db.transaction(
+          ["details"],
+          "readwrite"
+        );
+
+        const detailsStore = tx.objectStore("details");
+
+        const userContentDetails: UserContentDetails = {
+          hasUsedOnce: false,
+          last_used: "",
+          username: "",
+          currentProject: "",
+          updateRequired: false,
+        };
+        const addRequest = detailsStore.add(userContentDetails);
+
+        addRequest.onsuccess = () => {};
       };
       // IMPLEMENT: Some fatal error occurred when opening db
       dbRequest.onerror = (ev) => {
@@ -91,7 +114,7 @@ class IndexedDBOperations {
           {
             const validDataTypes = ["schema", "project", "capture"];
 
-            if (validDataTypes.includes(type)) {
+            if (!validDataTypes.includes(type)) {
               reject(
                 IndexedDBOperations._DBOperationResultFactory(
                   false,
@@ -114,7 +137,7 @@ class IndexedDBOperations {
         case "delete":
           {
             const validDataTypes = ["schema", "project", "capture"];
-            if (validDataTypes.includes(type)) {
+            if (!validDataTypes.includes(type)) {
               reject(
                 IndexedDBOperations._DBOperationResultFactory(
                   false,
@@ -143,7 +166,7 @@ class IndexedDBOperations {
               "details",
               "schemaMatches",
             ];
-            if (validDataTypes.includes(type)) {
+            if (!validDataTypes.includes(type)) {
               reject(
                 IndexedDBOperations._DBOperationResultFactory(
                   false,
@@ -190,7 +213,7 @@ class IndexedDBOperations {
     return new Promise((resolve, reject) => {
       switch (dataType) {
         case "all":
-          const userContentModel: UserContentModel = {
+          let userContentModel: UserContentModel = {
             details: {},
             projects: {},
             schemas: {},
@@ -223,10 +246,9 @@ class IndexedDBOperations {
 
           detailsStoreRequest.onsuccess = (ev) => {
             const details = ev.target as IDBRequest;
-            const retrievedData = details.result;
-            for (let entry of Object.entries(retrievedData)) {
-              userContentModel.details[entry[0]] = entry[1];
-            }
+            const [retrievedData] = details.result;
+
+            userContentModel.details = { ...retrievedData };
           };
           detailsStoreRequest.onerror = (ev) => {
             const details = ev.target as IDBRequest;
@@ -287,18 +309,19 @@ class IndexedDBOperations {
             return;
           };
 
-          tx?.commit();
+          tx.oncomplete = () => {
+            // Return user content model to send the frontend
+            resolve(
+              IndexedDBOperations._DBOperationResultFactory(
+                true,
+                "read",
+                "all",
+                null,
+                userContentModel
+              )
+            );
+          };
 
-          // Return user content model to send the frontend
-          resolve(
-            IndexedDBOperations._DBOperationResultFactory(
-              true,
-              "read",
-              "all",
-              null,
-              userContentModel
-            )
-          );
           break;
         case "schema":
           {
@@ -406,7 +429,7 @@ class IndexedDBOperations {
    * @returns {DBOperationResult}
    */
   private static _create(
-    dataType: "schema" | "project" | "capture",
+    dataType: "schema" | "project" | "capture" | "details",
     data: ProjectGroup | Capture | Schema
   ): Promise<DBOperationResult> {
     return new Promise((resolve, reject) => {
@@ -642,7 +665,7 @@ class IndexedDBOperations {
         case "project":
           {
             const projectData = data as ProjectGroup;
-            const tx = IndexedDBOperations._db?.transaction(["projects"]);
+            const tx = IndexedDBOperations._db?.transaction(["projects"], 'readwrite');
 
             const projectsStore = tx?.objectStore("projects");
             if (!projectsStore) {
@@ -657,8 +680,8 @@ class IndexedDBOperations {
               return;
             }
 
-            // Overwrite the project in the store.
-            const putRequest = projectsStore.put(projectData, projectData.id);
+            // Overwrite the project in the store. In
+            const putRequest = projectsStore.put(projectData);
 
             putRequest.onsuccess = (ev) => {
               resolve(
@@ -795,7 +818,10 @@ class IndexedDBOperations {
         case "schema":
           {
             const schemaData = data as Schema;
-            const tx = IndexedDBOperations._db?.transaction(["schemas"]);
+            const tx = IndexedDBOperations._db?.transaction(
+              ["schemas"],
+              "readwrite"
+            );
 
             const schemasStore = tx?.objectStore("schemas");
             if (!schemasStore) {
@@ -811,7 +837,7 @@ class IndexedDBOperations {
             }
 
             // Overwrite the schema in the store.
-            const putRequest = schemasStore.put(schemaData, schemaData.id);
+            const putRequest = schemasStore.put(schemaData);
 
             putRequest.onsuccess = (ev) => {
               resolve(
@@ -844,7 +870,10 @@ class IndexedDBOperations {
         case "details":
           {
             const userDetails = data as UserContentDetails;
-            const tx = IndexedDBOperations._db?.transaction(["details"]);
+            const tx = IndexedDBOperations._db?.transaction(
+              ["details"],
+              "readwrite"
+            );
 
             const detailsStore = tx?.objectStore("details");
             if (!detailsStore) {
@@ -860,7 +889,7 @@ class IndexedDBOperations {
             }
 
             // Overwrite the details in the store.
-            const putRequest = detailsStore.put(userDetails);
+            const putRequest = detailsStore.put(userDetails, 1);
 
             putRequest.onsuccess = (ev) => {
               resolve(
@@ -892,7 +921,10 @@ class IndexedDBOperations {
           break;
         case "schemaMatches":
           {
-            const tx = IndexedDBOperations._db?.transaction(["schemaMatches"]);
+            const tx = IndexedDBOperations._db?.transaction(
+              ["schemaMatches"],
+              "readwrite"
+            );
 
             const schemasStore = tx?.objectStore("schemaMatches");
 

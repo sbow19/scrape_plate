@@ -3,7 +3,7 @@
  */
 import { PopupTemplate } from "../components/popup_template";
 import { AppButtonTemplate } from "../../../shared/src/components/buttons/appButton";
-import { AppTableTemplate } from "../../../shared/src/components/table/appTable";
+import { AppTableTemplate } from "../components/table/appTable";
 import { useState, useCallback, useRef, useMemo, useContext } from "react";
 import * as styles from "./captureView.module.css";
 import {
@@ -24,16 +24,10 @@ export const CaptureView = () => {
     <>
       <PopupTemplate
         contentComponent={
-          <ContentComponent
-            projectDetails={{}}
-            captureId={''}
-          />
+          <ContentComponent projectDetails={{}} captureId={""} />
         }
         secondaryActions={
-          <SecondaryActions
-            projectDetails={{}}
-            captureId={''}
-          />
+          <SecondaryActions projectDetails={{}} captureId={""} />
         }
         primaryAction={<PrimaryAction />}
         backButtonEnabled={true}
@@ -57,7 +51,9 @@ const ContentComponent = ({ projectDetails, captureId }) => {
   }, []);
 
   // Input value
-  const [currentName, setCurrentName] = useState(projectDetails.captures[captureId].name);
+  const [currentName, setCurrentName] = useState(
+    projectDetails.captures[captureId].name
+  );
   const handleChangeText = useCallback((e) => {
     setCurrentName(e.value);
   }, []);
@@ -115,7 +111,7 @@ const ContentComponent = ({ projectDetails, captureId }) => {
             enableDelete: true,
             enableEdit: false,
             enableInLineEdit: true,
-            dataType: 'other'
+            dataType: "other",
           }}
         />
       </div>
@@ -131,25 +127,30 @@ const SecondaryActions = ({ projectDetails, captureId }) => {
   const handleSaveCapture = useCallback(() => {
     setToastState({
       open: true,
-      text:<p> Save changes to capture?</p>,
+      text: <p> Save changes to capture?</p>,
       buttons: [
         <AppButtonTemplate
-          onClick={()=>{
+          onClick={() => {
             setToastState({
-              open: false
-            })
+              open: false,
+            });
           }}
-        > No </AppButtonTemplate>,
+        >
+          {" "}
+          No{" "}
+        </AppButtonTemplate>,
         <AppButtonTemplate
-        onClick={()=>{
-          /* IMPLEMENT: trigger delete */
-          setToastState({
-            open: false
-          })
-
-        }}
-        > Yes </AppButtonTemplate>,
-      ]
+          onClick={() => {
+            /* IMPLEMENT: trigger delete */
+            setToastState({
+              open: false,
+            });
+          }}
+        >
+          {" "}
+          Yes{" "}
+        </AppButtonTemplate>,
+      ],
     });
   }, [setToastState]);
 
@@ -158,11 +159,9 @@ const SecondaryActions = ({ projectDetails, captureId }) => {
    */
   const handleDeleteCapture = useCallback(() => {
     setToastState({
-
       open: true,
       text: (
         <p>
-          
           Are you sure you want to delete
           {projectDetails.captures[captureId].name}?
         </p>
@@ -199,7 +198,11 @@ const SecondaryActions = ({ projectDetails, captureId }) => {
   const handleExportCapture = useCallback(() => {
     setToastState({
       open: true,
-      text: <p>How do you want to export {projectDetails.captures[captureId].name}?</p>,
+      text: (
+        <p>
+          How do you want to export {projectDetails.captures[captureId].name}?
+        </p>
+      ),
       buttons: [
         <AppButtonTemplate
           onClick={() => {
@@ -210,7 +213,10 @@ const SecondaryActions = ({ projectDetails, captureId }) => {
         >
           Back
         </AppButtonTemplate>,
-        <AppDropdown options={["json", "excel"]} data={projectDetails.captures[captureId]} />,
+        <AppDropdown
+          options={["json", "excel"]}
+          data={projectDetails.captures[captureId]}
+        />,
       ],
     });
   }, [toastState]);
@@ -247,12 +253,19 @@ const SecondaryActions = ({ projectDetails, captureId }) => {
 };
 
 const PrimaryAction = () => {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   return (
     <>
-      <HomeButton height={30} width={30} onClick={()=>{
-        navigate('/')
-      }} title="Home"/>
+      <HomeButton
+        height={30}
+        strokeColor="black"
+        pathFill="none"
+        width={30}
+        onClick={() => {
+          navigate("/action/index.html");
+        }}
+        title="Home"
+      />
     </>
   );
 };
