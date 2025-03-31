@@ -42,9 +42,7 @@ chrome.runtime.onMessage.addListener(
             dbResult
           );
 
-
           sendResponse(backendResponse);
-          
         })
         .catch((dbResult) => {
           const backendResponse: BackendResponse = backendResponseFactory(
@@ -63,13 +61,17 @@ chrome.runtime.onMessage.addListener(
  * Listen for change tab to close the side panel
  */
 
-chrome.tabs.onActivated.addListener(()=>{
-
+chrome.tabs.onActivated.addListener(() => {
   /* switch sidepanel off and on */
-  chrome.sidePanel.setOptions({enabled: false})
-  chrome.sidePanel.setOptions({enabled: true})
+  chrome.sidePanel.setOptions({ enabled: false });
+  chrome.sidePanel.setOptions({ enabled: true });
+});
 
-})
+chrome.tabs.onUpdated.addListener(() => {
+  /* switch sidepanel off and on */
+  chrome.sidePanel.setOptions({ enabled: false });
+  chrome.sidePanel.setOptions({ enabled: true });
+});
 /**
  *  Listen to change tab events to determine whether url matches a
  *  url patterns in user schemas
@@ -78,9 +80,10 @@ chrome.tabs.onActivated.addListener(() => {
   let currentTab: chrome.tabs.Tab = null;
   // Get tab information
   getCurrentTab()
-    .then((currentTab) => {
-      if (!currentTab) return;
-      currentTab = currentTab;
+    .then((currentTabSearch) => {
+      if (!currentTabSearch) return;
+
+      currentTab = currentTabSearch;
       // Get schemas
       return IndexedDBOperations.handleQuery({
         method: "read",
@@ -101,39 +104,35 @@ chrome.tabs.onActivated.addListener(() => {
           tabId: currentTab.id,
           text: "",
         });
+      } else if (matchingSchemas.length > 0) {
+        // Trigger action animation if to alert user if there is a matching schema
+        chrome.action.setBadgeText({
+          tabId: currentTab.id,
+          text: "Hit",
+        });
         chrome.action.setBadgeBackgroundColor({
           tabId: currentTab.id,
-          color: "",
+          color: "#0F0",
+        });
+
+        // Set Context menus for Captureview/edit for this tab
+        // ASSUMPTION: context menu callback will outlast the
+        // lifetime of the background script.
+        // ASSUMPTION: The callback will run such that the sidepanel code is
+        // able to actually catch the message signal
+
+        chrome.contextMenus.create({
+          title: "View/edit schema",
+          contexts: ["page"],
+          id: "edit_schema",
+        });
+
+        chrome.contextMenus.create({
+          title: "Capture page",
+          contexts: ["page"],
+          id: "edit_capture",
         });
       }
-
-      // Trigger action animation if to alert user if there is a matching schema
-      chrome.action.setBadgeText({
-        tabId: currentTab.id,
-        text: "Match",
-      });
-      chrome.action.setBadgeBackgroundColor({
-        tabId: currentTab.id,
-        color: "#0F0",
-      });
-
-      // Set Context menus for Captureview/edit for this tab
-      // ASSUMPTION: context menu callback will outlast the
-      // lifetime of the background script.
-      // ASSUMPTION: The callback will run such that the sidepanel code is
-      // able to actually catch the message signal
-
-      chrome.contextMenus.create({
-        title: "View/edit schema",
-        contexts: ["page"],
-        id: "edit_schema",
-      });
-
-      chrome.contextMenus.create({
-        title: "Capture page",
-        contexts: ["page"],
-        id: "edit_capture",
-      });
 
       // Save matching schemas in database
       return IndexedDBOperations.handleQuery({
@@ -143,7 +142,7 @@ chrome.tabs.onActivated.addListener(() => {
       });
     })
     .catch((error) => {
-      console.log(error);
+      console.log(error, "On activated schema checks");
     });
 });
 
@@ -152,9 +151,10 @@ chrome.tabs.onUpdated.addListener((tabId: number) => {
   let currentTab: chrome.tabs.Tab = null;
   // Get tab information
   getCurrentTab()
-    .then((currentTab) => {
-      if (!currentTab) return;
-      currentTab = currentTab;
+    .then((currentTabSearch) => {
+      console.log(currentTabSearch)
+      if (!currentTabSearch) return;
+      currentTab = currentTabSearch;
 
       // If changed tab is not current tab then return
       if (currentTab.id !== tabId) return;
@@ -174,26 +174,23 @@ chrome.tabs.onUpdated.addListener((tabId: number) => {
 
       const matchingSchemas = getMatchingSchemas(schemaResult, currentTab.url);
 
+
       if (matchingSchemas.length === 0) {
         chrome.action.setBadgeText({
           tabId: currentTab.id,
           text: "",
         });
+      } else if (matchingSchemas.length > 0) {
+        // Trigger action animation if to alert user if there is a matching schema
+        chrome.action.setBadgeText({
+          tabId: currentTab.id,
+          text: "Hit",
+        });
         chrome.action.setBadgeBackgroundColor({
           tabId: currentTab.id,
-          color: "",
+          color: "#0F0",
         });
       }
-
-      // Trigger action animation if to alert user if there is a matching schema
-      chrome.action.setBadgeText({
-        tabId: currentTab.id,
-        text: "Match",
-      });
-      chrome.action.setBadgeBackgroundColor({
-        tabId: currentTab.id,
-        color: "#0F0",
-      });
 
       // Save in matches store in IndexedDB
       return IndexedDBOperations.handleQuery({
@@ -364,7 +361,7 @@ chrome.commands.onCommand.addListener((command, tab) => {
             data: {
               method: "create_schema",
               schema: null,
-              tab: tab
+              tab: tab,
             },
           };
 

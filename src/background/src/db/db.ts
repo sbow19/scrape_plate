@@ -351,7 +351,7 @@ class IndexedDBOperations {
               return;
             };
 
-            schemasRequest.onerror((ev) => {
+            schemasRequest.onerror = (ev) => {
               const result = ev.target as IDBRequest;
               reject(
                 IndexedDBOperations._DBOperationResultFactory(
@@ -363,7 +363,7 @@ class IndexedDBOperations {
               );
               tx?.abort();
               return;
-            });
+            };
           }
           break;
         case "schemaMatches":
