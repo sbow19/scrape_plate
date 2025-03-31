@@ -14,7 +14,7 @@ class UserContent {
   private static _userContentModel: UserContentModel;
   private static _schemaMatches: Schema[];
   private static _eventEmitter: EventEmitter = new EventEmitter();
-  private static _hasLoaded: boolean =  false
+  private static _hasLoaded: boolean = false;
 
   private static _testData: UserContentModel = testUserContentModelData;
 
@@ -64,7 +64,6 @@ class UserContent {
    * @returns User content model
    */
   private static async _fetchUserContent(): Promise<UserContentModel> {
-
     return new Promise((resolve, reject) => {
       try {
         const options: CRUDDataOptions = {
@@ -76,18 +75,15 @@ class UserContent {
         chrome.runtime
           .sendMessage(backendMessage)
           .then((backendResponse: BackendResponse) => {
-
             if (backendResponse.operation !== "database")
               reject(backendResponse);
 
             if (!backendResponse.data.success) reject(backendResponse);
 
-
             // IMPLEMENT: validate user content model
             UserContent._userContentModel = backendResponse.data.payload;
 
             resolve(UserContent._userContentModel);
-
           })
           .catch((e) => {
             reject(e);
@@ -234,7 +230,6 @@ class UserContent {
     }
   }
 
-
   /**
    * Search fo projects, captures, and schemas, with a name or id
    * matching the exact search term
@@ -280,10 +275,7 @@ class UserContent {
         results = Object.values(
           UserContent._userContentModel["schemas"]
         ).filter((schema) => {
-          if (
-            schema.name &&
-            schema.name.toLowerCase() === term.toLowerCase()
-          ) {
+          if (schema.name && schema.name.toLowerCase() === term.toLowerCase()) {
             return true;
           } else if (schema.id === term) {
             return true;
@@ -327,14 +319,12 @@ class UserContent {
     validateCRUDOptions(options);
 
     // Check for duplicates captures, project or
-    let results = [] 
-    if(["schema", "capture", "project"].includes(options.type)){
-      results = UserContent._returnExactSearch(
-        {
-          type: options.type,
-          term: options.data.name
-        }
-      ) 
+    let results = [];
+    if (["schema", "capture", "project"].includes(options.type)) {
+      results = UserContent._returnExactSearch({
+        type: options.type,
+        term: options.data.name,
+      });
     }
 
     // Compose background script message
@@ -371,23 +361,23 @@ class UserContent {
     }
 
     return new Promise((resolve, reject) => {
-      if(results.length > 0){
+      if (results.length > 0) {
         const backendResponse: BackendResponse = {
-          operation: 'database',
-          
+          operation: "database",
+
           data: {
             success: false,
             message: `${options.type}: ${options.data.name} already exists.`,
             payload: null,
-            type: 'project',
-            method: 'create'
-          } 
-        }
+            type: "project",
+            method: "create",
+          },
+        };
 
-        reject(backendResponse)
-        return
+        reject(backendResponse);
+        return;
       }
-      
+
       // If successfully updated Indexeddb store, then we update local copy of USerContentModal
       chrome.runtime
         .sendMessage(backendMessage)
@@ -431,6 +421,9 @@ class UserContent {
       case "schema":
         dataType = "schemas";
         break;
+      case "schemaEntry":
+        dataType = "schemaEntry";
+        break;
     }
 
     return new Promise((resolve, reject) => {
@@ -445,10 +438,14 @@ class UserContent {
               delete UserContent._userContentModel["projects"][
                 options.data.project_id
               ].captures[options.data.id];
-            } else {
+            } else if(dataType === "schemaEntry"){
+              delete UserContent._userContentModel["schemas"][
+                options.data.schema_id
+              ].schema[options.data.id];
+            }else {
               delete UserContent._userContentModel[dataType][options.data];
             }
-            
+
             // Return database response
             resolve(response);
           } else if (!response.data.success) {
@@ -486,7 +483,7 @@ class UserContent {
         dataType = "schemas";
         break;
       default:
-        dataType = options.type
+        dataType = options.type;
     }
 
     return new Promise((resolve, reject) => {
@@ -501,8 +498,8 @@ class UserContent {
               UserContent._userContentModel["projects"][
                 options.data.project_id
               ].captures[options.data.id] = options.data;
-            } else if(dataType === 'details'){
-              UserContent._userContentModel[dataType] = options.data
+            } else if (dataType === "details") {
+              UserContent._userContentModel[dataType] = options.data;
             } else {
               UserContent._userContentModel[dataType][options.data.id] =
                 options.data;
@@ -515,8 +512,7 @@ class UserContent {
           }
         })
         .catch((error) => {
-
-          reject(error)
+          reject(error);
         }); // Misc error
     });
   }
@@ -527,11 +523,11 @@ class UserContent {
   }
 
   static get hasLoaded() {
-    return UserContent._hasLoaded
+    return UserContent._hasLoaded;
   }
 
   static set hasLoaded(f: boolean) {
-    UserContent._hasLoaded = f
+    UserContent._hasLoaded = f;
   }
 
   private static _setTestData() {

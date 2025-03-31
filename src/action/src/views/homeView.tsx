@@ -239,7 +239,7 @@ const SecondaryActions = () => {
         </AppButtonTemplate>,
         <AppButtonTemplate
           onClick={() => {
-            openSidePanel(tab, "create_schema", "");
+            openSidePanel(tab, "create_schema",  null);
           }}
         >
           Create

@@ -24,17 +24,19 @@ declare global {
     currentProject: ProjectId | null;
   };
 
+  type SchemaModel = {
+    [key: string]: SchemaEntry; // Key represented by id of the schema entry
+  };
+
   type Schema = {
     id: SchemaId;
     name: string | null;
     url_match: string; // Schemas must match a specific url pattern
-    schema: {
-      [key: string]: SchemaEntry; // Key represents the id of the schema entry
-    };
+    schema: SchemaModel;
   };
 
   type SchemaEntry = {
-    id: string      
+    id: string;
     key: {
       match_expression: string | null; // Represents match term
       match_type: MatchMethod; // Represents the methods for determining the key value, which can be done manually
@@ -67,16 +69,15 @@ declare global {
     project_id: ProjectId;
     url_match: string;
     name: string;
-    capture_body: {
-      [key: string]: SchemaEntry; // Key represents the id of the capture body
-    };
+    capture_body: SchemaModel;
   };
+
   type SchemaId = string;
   type ProjectId = string;
 
   // Options
   type SearchOptions = {
-    type: 'project' | "schema" | "capture";
+    type: "project" | "schema" | "capture";
     term: string;
   };
 
@@ -90,6 +91,14 @@ declare global {
         method: "delete";
         type: "schema" | "project";
         data: SchemaId | ProjectId;
+      }
+      | {
+        method: "delete";
+        type: "schemaEntry";
+        data: {
+          schema_id: SchemaId,
+          id: string   // SchemaEntry id
+        };
       }
     | {
         method: "delete";
@@ -123,14 +132,14 @@ declare global {
       schema: Schema | Array<Schema>; // Matching schema or schemas
     };
 
-    getCurrentTab: chrome.tabs.Tab
+    getCurrentTab: chrome.tabs.Tab;
   };
 
   type BackendResponse =
     | {
-      operation: 'getCurrentTab'
-      data: BackendResponseOptions['getCurrentTab']
-    }
+        operation: "getCurrentTab";
+        data: BackendResponseOptions["getCurrentTab"];
+      }
     | {
         operation: "database";
         data: BackendResponseOptions["data"];
@@ -144,21 +153,60 @@ declare global {
    * Messages
    */
   type BackendMessageOptions = {
-    data: CRUDDataOptions;
-    openSidePanel: {
-      method: "edit_schema" | "create_schema" | "edit_capture";
-      schema: Schema | Schema[] | null | Capture;
-      tab?: chrome.tabs.Tab
-    };
+    /**
+     * Interact with Indexeddb
+     */
+    database: CRUDDataOptions;
+
+    /**
+     * Open side panel and send schema/capture model
+     */
+    openSidePanel: OpenSidePanelOptions;
     otherOperation: {
       otherField: string;
       success: boolean;
     };
+
+    /**
+     * Content script message to extension containing captured info
+     * from DOM. Either single data point or entire schema matches.
+     */
+    sendDOMData: SendDOMDataOptions;
+  };
+
+  type SendDOMDataOptions =
+    | {
+        type: "fetchOne";
+        data: DOMDataPoint;
+      }
+    | {
+        type: "fetchMany";
+        data: SchemaModel;
+      };
+
+  type DOMDataPoint = {
+    matchType: "id" | "css selector" | "regex";
+    matchExpression: string;
+    matchValue: string;
+  };
+
+  type BackendOperation =
+    | "openSidePanel"
+    | "getCurrentTab"
+    | "database"
+    | "otherOperation"
+    | "sendDOMData";
+
+  type OpenSidePanelOptions = {
+    method: "edit_schema" | "create_schema" | "edit_capture";
+    schema: Schema | Schema[] | null | Capture;
+    tab?: chrome.tabs.Tab;
   };
 
   type BackendMessage =
-    | { operation: 'getCurrentTab'; data: ''}
-    | { operation: "database"; data: BackendMessageOptions["data"] }
+    | { operation: "getCurrentTab"; data: "" }
+    | { operation: "sendDOMData"; data: BackendMessageOptions["sendDOMData"] }
+    | { operation: "database"; data: BackendMessageOptions["database"] }
     | {
         operation: "openSidePanel";
         data: BackendMessageOptions["openSidePanel"];
@@ -176,17 +224,14 @@ declare global {
     method: DBOperations;
     type: DBOperationDataType;
     message: DBErrorMessage | null;
-    data?:
-      | UserContentModel
-      | {
-          [key: string]: Schema;
-        };
+    data?: UserContentModel | SchemaModel;
   };
 
   type DBOperations = "read" | "update" | "delete" | "create";
   type DBOperationDataType =
     | "details"
     | "schema"
+    | "schemaEntry"
     | "project"
     | "capture"
     | "all"
@@ -199,11 +244,13 @@ declare global {
     | "Delete project request failed"
     | "Delete schema request failed"
     | "Get operation on projects store failed"
+    | "Get operation on schemas store failed"
     | "Capture id does not exist"
     | "Create project request failed"
     | "Create schema request failed"
     | "Capture id already exists"
     | "Invalid DB method"
+    |  "SchemaEntry id does not exist"
 
     // DOM Exceptions
     | DOMException
@@ -266,7 +313,7 @@ declare global {
   type AppTableProps = {
     tableData: TableData | null;
     options: TableOptions;
-    resetTableData: React.Dispatch<React.SetStateAction<boolean>>
+    resetTableData: React.Dispatch<React.SetStateAction<boolean>>;
   };
 
   type ToastProps = {
@@ -282,32 +329,32 @@ declare global {
     /**
      * Tooltip on hover
      */
-    title: string
-    children: React.ReactNode
-    onClick: ()=> void
+    title: string;
+    children: React.ReactNode;
+    onClick: () => void;
     /**
      * CSS Module outside button template
      */
-    buttonStyle?: string       
-  }
+    buttonStyle?: string;
+  };
 
   type SchemaFormTemplateProps = {
-    modelType: ModelTypes
-    operation: 'create_schema' | 'edit_schema' | 'edit_capture'
-    model: Schema | Schema[] | Capture | null
-    currentURL: string
-  }
+    modelType: ModelTypes;
+    operation: "create_schema" | "edit_schema" | "edit_capture";
+    model: Schema | Schema[] | Capture | null;
+  };
 
   type SchemaFormProps = {
-    formModel: Capture | Schema
-    modelReducerObject:ReducerObject
-  }
+    formModel: Capture | Schema;
+    modelReducerObject: ReducerObject;
+  };
 
   type SchemaFormTableProps = {
-    formModel: Capture | Schema
-    operation: 'create_schema' | 'edit_schema' | 'edit_capture'
-    modelReducerObject: ReducerObject
-  }
+    formModel: Capture | Schema;
+    operation: "create_schema" | "edit_schema" | "edit_capture";
+    modelReducerObject: ReducerObject;
+    focusedCell: string;
+  };
 
   type TableData = {
     header: Array<string>;
@@ -320,9 +367,10 @@ declare global {
   type TableOptions = {
     enableDelete: boolean;
     enableEdit: boolean;
-    enableSet: boolean;         // Set whether project is current project
+    enableSet: boolean; // Set whether project is current project
     enableInLineEdit: boolean;
     dataType: DBOperationDataType;
+    ownerId: string // If project or schema, they own captures and schemaEntries
   };
 
   type TableDataTypeOptions =
@@ -339,7 +387,7 @@ declare global {
     text?: React.ReactNode;
     buttons?: Array<React.ReactNode>;
     timer?: number;
-    timerCallback?: ()=>void
+    timerCallback?: () => void;
   };
 
   /**
@@ -347,25 +395,50 @@ declare global {
    */
 
   //use Model hook
-  type ModelTypes =  'schema' | 'capture'
+  type ModelTypes = "schema" | "capture";
 
   type ReducerObject = {
-    modelKeys: Array<string>
-    update: (
-      key: string
-      content: any
-    )=>void 
-    delete: (
-      key: string
-      content: any
-    )=>void 
-    create: (
-      key: string
-      content: any
-    )=>void 
-    read: ()=>Schema | Capture
-    reset: ()=>void
-  }
+    update: (key: string, content: string | SchemaModel) => void;
+    addNewRow: () => void;
+    deleteRow: (entryId: string) => void;
+    focusOnCell: (cellId: string) => void;
+    updateCurrentCell: (domOptions: SendDOMDataOptions)=> void
+    moveFocusedCell: (command: string) => void;
+    read: () => Schema | Capture;
+
+    /**
+     * If creating new schema, then reset to empty model with url.
+     * If editing schema, new original Model is the updated formModel
+     * @param formModel 
+     * @returns 
+     */
+    reset: (formModel?: Schema | Capture) => void;
+  };
+
+  type CellList = {
+    /**
+     * Entry id array in order as appears in table view. Only set once
+     */
+    rowOrder: Array<string>;
+    /**
+     * Entry id representing a row. Entry id is the id for a Schema Entry
+     */
+    currentRow: string;
+    /**
+     * Id of cell. Composed of SchemaEntry id and -key or -value
+     */
+    focusedCell: string;
+
+    /**
+     * Object containing all cell ids searchable by entry id
+     */
+    schemaRows: {
+      [key: string]: {
+        key: string;
+        value: string;
+      };
+    };
+  };
 }
 
 export {};

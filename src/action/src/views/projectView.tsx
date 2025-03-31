@@ -128,6 +128,7 @@ const ContentComponent = ({ projectDetails, setProjectDetails }) => {
             enableSet: false,
             enableInLineEdit: false,
             dataType: "capture",
+            ownerId: projectDetails.id
           }}
         />
       </div>

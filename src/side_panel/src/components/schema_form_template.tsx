@@ -1,49 +1,60 @@
-import { useContext, useRef } from "react";
+import { useCallback, useContext } from "react";
 import { useModel } from "../hooks/useModel";
 import * as styles from "./schema_form_template.module.css";
 
 import ToastContext from "../context/Toast";
+import ExtensionContext from "../context/ExtensionObjects";
 import { AppButtonTemplate } from "../../../shared/src/components/buttons/appButton";
 
 import { CreateSchemaHeader } from "./schema_components/header/CreateSchema";
 import { EditCaptureHeader } from "./schema_components/header/EditCapture";
 import { EditSchemaHeader } from "./schema_components/header/EditSchema";
 
-// import { dummySchemaModel, dummyCaptureModel } from "../test/dummyData";
 import { SchemaTable } from "./schema_components/table/SchemaTable";
 import { CaptureTable } from "./schema_components/table/CaptureTable";
+import { messageFactory } from "../../../shared/src/utils/helpers";
 /**
- * Captures, edit, and schema creator views are forms, in that
- * they can be edited, deleted etc. Saving a  new schema, editing
- * ame existing schema, or getting a new capture will trigger
- * an IndexedDB operation using the data collected from the form.
+ * Captures, edit, and schema creator views are forms the user can interact with
+ * , in that they can be edited, deleted etc. A buffered version of the schema or
+ * capture is held locally by the useContent hook, and can be updated using the
+ * reducerObject returned by the hook.
  *
- *
+ * Once a user is ready to save changes, the local copy of the schema or capture
+ * is sent to the service worker to be saved in the IndexedDB store.
  */
 
 export const SchemaFormTemplate: React.FC<SchemaFormTemplateProps> = ({
   modelType,
   operation,
   model,
-  currentURL
 }) => {
   /**
-   * Maintain local copy of schema or capture before updating the user content model
-   * in the backend
+   * Chrome tab data and communication port to send messages with content script.
    */
+  const [tab, port] = useContext(ExtensionContext);
 
-  const [formModel, modelReducerObject] = useModel(modelType, model);
+  /**
+   * Maintain local copy of schema or capture before updating the user content model
+   * via service worker.
+   */
+  const [formModel, modelReducerObject, focusedCell] = useModel(
+    modelType,
+    tab?.url ?? "",
+    model
+  );
 
   /**
    * Reset changes to existing schema or capture model
    */
   const handleReset = () => {
-    modelReducerObject.reset();
+    modelReducerObject.reset(model);
   };
-
 
   const [, setToastState] = useContext(ToastContext);
 
+  /**
+   * Trigger save to IndexedDB via service worker
+   */
   const handleSave = () => {
     setToastState({
       open: true,
@@ -61,10 +72,63 @@ export const SchemaFormTemplate: React.FC<SchemaFormTemplateProps> = ({
         <AppButtonTemplate
           onClick={() => {
             // Trigger save operation
-            setToastState({
-              open: false,
-            });
+
+            const newSchemaOp: CRUDDataOptions = {
+              method: "",
+              type: "",
+              data: {}
+            } 
+
+            switch(operation){
+              case "create_schema":
+                newSchemaOp.method = "create"
+                newSchemaOp.type = "schema"
+                newSchemaOp.data = formModel
+                break
+              case "edit_capture":
+                break
+              case "edit_schema":
+                newSchemaOp.method = "update"
+                newSchemaOp.type = "schema"
+                newSchemaOp.data = formModel
+                break
+              default:
+                setToastState({
+                  open: true,
+                  text: <p>Oops! Something went wrong</p>,
+                  timer: 1250
+                })
+                break
+            }
+            const backendMessage = messageFactory("database", newSchemaOp)
+            chrome.runtime.sendMessage(backendMessage)
+            .then((be: BackendResponse)=>{
+
+              if(be.data.success){
+                setToastState({
+                  open: true,
+                  text: <p>Changes saved successfully!</p>,
+                  timer: 1250
+                });
+
+                modelReducerObject.reset(formModel)
+              }
+
+            })
+            .catch((be: BackendResponse)=>{
+              setToastState({
+                open: true,
+                text: <p>Oops! Changes not saved successfully</p>,
+                timer: 1250
+              });
+            })
+            
+
+
+            // Disconnect connection with content script
+            port?.disconnect()
           }}
+
         >
           Yes
         </AppButtonTemplate>,
@@ -72,7 +136,6 @@ export const SchemaFormTemplate: React.FC<SchemaFormTemplateProps> = ({
     });
   };
 
-  // Header
   let headerComponent: React.ReactNode = <></>;
 
   switch (operation) {
@@ -81,7 +144,6 @@ export const SchemaFormTemplate: React.FC<SchemaFormTemplateProps> = ({
         <CreateSchemaHeader
           formModel={formModel}
           modelReducerObject={modelReducerObject}
-
         ></CreateSchemaHeader>
       );
       break;
@@ -120,12 +182,15 @@ export const SchemaFormTemplate: React.FC<SchemaFormTemplateProps> = ({
               formModel={formModel}
               modelReducerObject={modelReducerObject}
               operation={operation}
+              focusedCell={focusedCell}
             />
           ) : (
             <SchemaTable
               formModel={formModel}
               modelReducerObject={modelReducerObject}
               operation={operation}
+              focusedCell={focusedCell}
+
             ></SchemaTable>
           )}
         </div>

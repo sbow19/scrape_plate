@@ -136,7 +136,7 @@ class IndexedDBOperations {
           break;
         case "delete":
           {
-            const validDataTypes = ["schema", "project", "capture"];
+            const validDataTypes = ["schema", "project", "capture", "schemaEntry"];
             if (!validDataTypes.includes(type)) {
               reject(
                 IndexedDBOperations._DBOperationResultFactory(
@@ -593,6 +593,7 @@ class IndexedDBOperations {
         case "schema":
           {
             const schemaData = data as Schema;
+            // Add
             const tx = IndexedDBOperations._db?.transaction(
               ["schemas"],
               "readwrite"
@@ -665,7 +666,10 @@ class IndexedDBOperations {
         case "project":
           {
             const projectData = data as ProjectGroup;
-            const tx = IndexedDBOperations._db?.transaction(["projects"], 'readwrite');
+            const tx = IndexedDBOperations._db?.transaction(
+              ["projects"],
+              "readwrite"
+            );
 
             const projectsStore = tx?.objectStore("projects");
             if (!projectsStore) {
@@ -974,12 +978,16 @@ class IndexedDBOperations {
   }
 
   private static _delete(
-    dataType: "schema" | "project" | "capture",
+    dataType: "schema" | "project" | "capture" | "schemaEntry",
     data:
       | SchemaId
       | ProjectId
       | {
           project_id: ProjectId;
+          id: string;
+        }
+      | {
+          schema_id: SchemaId;
           id: string;
         }
   ): Promise<DBOperationResult> {
@@ -1179,6 +1187,115 @@ class IndexedDBOperations {
                   false,
                   "delete",
                   "schema",
+                  details.error
+                )
+              );
+              tx?.abort();
+              return;
+            };
+          }
+          break;
+        case "schemaEntry":
+          {
+            const schemaEntryDetails = data as {
+              schema_id: SchemaId;
+              id: string;
+            };
+            const tx = IndexedDBOperations._db?.transaction(
+              ["schemas"],
+              "readwrite"
+            );
+
+            console.log(schemaEntryDetails)
+            // Get schema store
+            const schemaStore = tx?.objectStore("schemas");
+            if (!schemaStore) {
+              reject(
+                IndexedDBOperations._DBOperationResultFactory(
+                  false,
+                  "delete",
+                  "schemaEntry",
+                  "Get operation on schemas store failed"
+                )
+              );
+              tx?.abort();
+              return;
+            }
+
+            const schemaRequest = schemaStore.get(schemaEntryDetails.schema_id);
+
+            if (!schemaRequest) {
+              reject(
+                IndexedDBOperations._DBOperationResultFactory(
+                  false,
+                  "delete",
+                  "schemaEntry",
+                  "Get operation on schemas store failed"
+                )
+              );
+              tx?.abort();
+              return;
+            }
+
+            schemaRequest.onsuccess = (ev) => {
+              // Remove schemaEntry from schema
+              const details = ev.target as IDBRequest;
+              const schema: Schema = details.result;
+
+              // Delete schemaEntry
+              if (!Object.keys(schema.schema).includes(schemaEntryDetails.id)) {
+                reject(
+                  IndexedDBOperations._DBOperationResultFactory(
+                    false,
+                    "delete",
+                    "schemaEntry",
+                    "SchemaEntry id does not exist"
+                  )
+                );
+                tx?.abort();
+                return;
+              }
+
+              delete schema.schema[schemaEntryDetails.id];
+
+              // Put object back in store
+              const putRequest = schemaStore.put(schema);
+
+              putRequest.onerror = (ev) => {
+                const details = ev.target as IDBRequest;
+                reject(
+                  IndexedDBOperations._DBOperationResultFactory(
+                    false,
+                    "delete",
+                    "schemaEntry",
+                    details.error
+                  )
+                );
+                tx?.abort();
+                return;
+              };
+
+              putRequest.onsuccess = (ev) => {
+                resolve(
+                  IndexedDBOperations._DBOperationResultFactory(
+                    true,
+                    "delete",
+                    "schemaEntry",
+                    null
+                  )
+                );
+                tx?.commit();
+                return;
+              };
+            };
+
+            schemaRequest.onerror = (ev) => {
+              const details = ev.target as IDBRequest;
+              reject(
+                IndexedDBOperations._DBOperationResultFactory(
+                  false,
+                  "delete",
+                  "schemaEntry",
                   details.error
                 )
               );

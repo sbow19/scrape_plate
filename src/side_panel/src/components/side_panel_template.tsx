@@ -4,7 +4,6 @@
  */
 import * as styles from "./side_panel_template.module.css";
 import {
-  BackButton,
   ExitButton,
 } from "../../../shared/src/assets/icons/appIcons";
 
@@ -12,11 +11,7 @@ import ToastContext from "../context/Toast";
 import { Toast } from "./Toast";
 import { useState } from "react";
 
-export const SidePanelTemplate: React.FC = ({
-  children,
-  secondaryActions,
-  primaryAction,
-}) => {
+export const SidePanelTemplate: React.FC = ({ children }) => {
   const handleToast = useState<ToastState>({
     open: false,
   });
@@ -43,32 +38,14 @@ export const SidePanelTemplate: React.FC = ({
                 pathFill="transparent"
                 strokeColor="black"
                 svgFill="#353535ff"
-                onClick={()=>{
-                  window.close()
-                }}
-              />
-            </div>
-          </div>
-
-          <div className={styles.popup_content_container}>
-            {/* Back button  */}
-
-            <div className={styles.back_button_container}>
-              <BackButton
-                height={30}
-                width={30}
-                strokeColor="black"
                 onClick={() => {
-                  /* Trigger return to popup */
+                  window.close();
                 }}
-                title="Back"
               />
             </div>
-
-            {children}
           </div>
-          
-          
+
+          <div className={styles.popup_content_container}>{children}</div>
         </div>
 
         {/* Toast */}

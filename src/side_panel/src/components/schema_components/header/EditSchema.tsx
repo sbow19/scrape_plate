@@ -28,7 +28,7 @@ export const EditSchemaHeader: React.FC<SchemaFormProps> = ({
         </label>
         <input
           type="text"
-          value={formModel.name}
+          value={formModel?.name ?? ''}
           onChange={(e) => {
             modelReducerObject.update("name", e.target.value);
           }}

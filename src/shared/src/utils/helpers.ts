@@ -203,8 +203,8 @@ export function validateSchemaEntry(entryToValidate: SchemaEntry) {
   const matched_types = ["id", "css selector", "manual", "regex "];
   const valid_value_types = ["string", "object"];
 
-  if(!entryToValidate.id){
-    throw new TypeError("Schema must contain an id")
+  if (!entryToValidate.id) {
+    throw new TypeError("Schema must contain an id");
   }
 
   if (typeof entryToValidate !== "object")
@@ -293,19 +293,58 @@ export function validateCRUDOptions(options: CRUDDataOptions): void {
   validateData(type, data);
 }
 
-// HELPERS - REFACTOR - MOVE INTO SEPARATE MODULE WITH OTHER  VALIDATION FUNCTIONS
+/**
+ * Generate backend messages
+ *
+ */
+
 export function messageFactory(
-  operation: string,
-  messageData?: CRUDDataOptions
+  operation: "database",
+  message: CRUDDataOptions
+): BackendMessage;
+export function messageFactory(
+  operation: "openSidePanel",
+  message: OpenSidePanelOptions
+): BackendMessage;
+export function messageFactory(
+  operation: "otherOperation",
+  message: { otherField: any; success: boolean }
+): BackendMessage;
+export function messageFactory(operation: "getCurrentTab"): BackendMessage;
+export function messageFactory(operation: "sendDOMData", message: SendDOMDataOptions): BackendMessage;
+export function messageFactory(
+  operation: BackendOperation,
+  messageData?: any
 ): BackendMessage {
   switch (operation) {
     case "database":
       if (!messageData)
-        throw new Error("CRUD OPtions data required for db operation");
+        throw new Error("CRUD Options data required for db operation");
       return {
         operation: operation,
         data: messageData,
       };
+    case "openSidePanel":
+      if (!messageData)
+        throw new Error("OpenSidePanelOptions required to open side panel");
+      return {
+        operation: operation,
+        data: messageData,
+      };
+    case "getCurrentTab":
+      return {
+        operation: operation,
+        data: '',
+      };
+    case "sendDOMData":
+      if (!messageData)
+        throw new Error("DOM Data required to send DOM Message");
+      return {
+        operation: "sendDOMData",
+        data: messageData
+      }
+     
+
     case "otherOperation":
       return {
         operation: operation,
@@ -327,28 +366,43 @@ export function messageFactory(
 export function tableDataConverter(
   type: "projectList",
   data: ProjectGroup[]
-): TableData | null ;
-export function tableDataConverter(type: "project", data: ProjectGroup): TableData | null ;
-export function tableDataConverter(type: "captureList", data: Capture[]): TableData | null ;
-export function tableDataConverter(type: "capture", data: Capture): TableData | null ;
-export function tableDataConverter(type: "schemaList", data: Schema[]): TableData | null ;
-export function tableDataConverter(type: "schema", data: SchemaEntry[]): TableData | null ;
+): TableData | null;
+export function tableDataConverter(
+  type: "project",
+  data: ProjectGroup
+): TableData | null;
+export function tableDataConverter(
+  type: "captureList",
+  data: Capture[]
+): TableData | null;
+export function tableDataConverter(
+  type: "capture",
+  data: Capture
+): TableData | null;
+export function tableDataConverter(
+  type: "schemaList",
+  data: Schema[]
+): TableData | null;
+export function tableDataConverter(
+  type: "schema",
+  data: SchemaEntry[]
+): TableData | null;
 export function tableDataConverter(
   type: "schemaMatchList",
   data: Schema[]
-): TableData | null ;
+): TableData | null;
 
 /**
- * 
+ *
  * @param type      // Determines headers and data parsing
- * @param data 
+ * @param data
  * @returns Table data is an object with a header property and data property
- * 
+ *
  * The data property contains an array of arrays (list of rows of datapoints).
  * Each row of data is itself and array. For each row of data, the first index is
  * reserved for the id representing the item for that row. This id is used for
  * edit and delete operations.
- * 
+ *
  */
 export function tableDataConverter(
   type: TableDataTypeOptions,
@@ -359,7 +413,12 @@ export function tableDataConverter(
       return {
         header: ["name", "url", "date captured"],
         data: data.map((capture: Capture) => {
-          return [capture.id, capture.name, capture.url_match, convertISOToDate(capture.date_created)];
+          return [
+            capture.id,
+            capture.name,
+            capture.url_match,
+            convertISOToDate(capture.date_created),
+          ];
         }),
       };
     }
@@ -367,27 +426,30 @@ export function tableDataConverter(
       return {
         header: ["key", "value"],
         data: data.map((capture: SchemaEntry) => {
-          return ['', capture.key.matched_value, capture.value.matched_value];
+          return ["", capture.key.matched_value, capture.value.matched_value];
         }),
       };
     case "projectList":
       return {
         header: ["name", "date created", "last edited"],
         data: data.map((project: ProjectGroup) => {
-          return [project.id, project.name, convertISOToDate(project.date_created), convertISOToDate(project.last_edited)];
+          return [
+            project.id,
+            project.name,
+            convertISOToDate(project.date_created),
+            convertISOToDate(project.last_edited),
+          ];
         }),
       };
-    case "schemaMatchList":{
-
-      const dataTyped = data as Schema[]
+    case "schemaMatchList": {
+      const dataTyped = data as Schema[];
       return {
         header: ["name", "url match"],
         data: dataTyped.map((schema) => {
           return [schema.id, schema.name, schema.url_match];
         }),
-      }
-
-    };
+      };
+    }
     case "schemaList":
       return {
         header: ["name", "url_match"],
@@ -403,7 +465,7 @@ export function tableDataConverter(
         header: ["key", "type", "value", "type"],
         data: data.map((schema: SchemaEntry) => {
           return [
-            '',
+            schema.id,
             schema.key?.match_type === "manual"
               ? schema.key.matched_value
               : schema.key.match_expression,
@@ -415,84 +477,78 @@ export function tableDataConverter(
       };
 
     default:
-      return null
-
+      return null;
   }
 }
 
-export function convertISOToDate(date: string):string | null {
-
-  if(!date) return null 
-  const newDate = new Date(date)
-  return `${newDate.getDate()} ${monthMatch[newDate.getMonth()]} ${newDate.getFullYear()}`
+export function convertISOToDate(date: string): string | null {
+  if (!date) return null;
+  const newDate = new Date(date);
+  return `${newDate.getDate()} ${
+    monthMatch[newDate.getMonth()]
+  } ${newDate.getFullYear()}`;
 }
 
 /**
  * Experimental. Recusively go through object
- * @param targObj 
+ * @param targObj
  */
-export function deepClone(targObj: object | null, resultObj: object): object | null {
+export function deepClone(
+  targObj: object | null,
+  resultObj: object
+): object | null {
+  if (targObj === null) return null;
 
-  if(targObj === null) return null
-
-  Object.entries(targObj).forEach((entry)=>{
-
+  Object.entries(targObj).forEach((entry) => {
     // Set key on result Obj
-    resultObj[entry[0]] = null
-    const value = entry[1]
+    resultObj[entry[0]] = null;
+    const value = entry[1];
 
-
-
-    if(value !== null && typeof value === 'object' && !Array.isArray(value)){
-      resultObj[entry[0]] = {}
-      deepClone(value, resultObj[entry[0]])
-    } 
-    
-    else if (Array.isArray(value)){
+    if (value !== null && typeof value === "object" && !Array.isArray(value)) {
+      resultObj[entry[0]] = {};
+      deepClone(value, resultObj[entry[0]]);
+    } else if (Array.isArray(value)) {
       resultObj[entry[0]] = [];
 
-      arrayClone(value, resultObj[entry[0]])
-      
+      arrayClone(value, resultObj[entry[0]]);
     } else {
-      
-      resultObj[entry[0]] = entry[1]
+      resultObj[entry[0]] = entry[1];
     }
-  })
-  return resultObj
+  });
+  return resultObj;
 }
 
-function arrayClone(arr: any[], resAr: any[]){
-
-  arr.forEach((val)=>{
-    if(Array.isArray(val)){
-      const newAr: any[] = []
-      arrayClone(val, newAr)
-      resAr.push(newAr)
-    } else if (val !== null && typeof val === 'object'){
-      const newObj = {}
-      deepClone(val, newObj)
-      resAr.push(newObj)
+function arrayClone(arr: any[], resAr: any[]) {
+  arr.forEach((val) => {
+    if (Array.isArray(val)) {
+      const newAr: any[] = [];
+      arrayClone(val, newAr);
+      resAr.push(newAr);
+    } else if (val !== null && typeof val === "object") {
+      const newObj = {};
+      deepClone(val, newObj);
+      resAr.push(newObj);
     } else {
-      resAr.push(val)
+      resAr.push(val);
     }
-  })
+  });
 
-  return resAr
+  return resAr;
 }
 
 const monthMatch: {
-  [key: number]: string
+  [key: number]: string;
 } = {
-  0: 'January',
-  1: 'February',
-  2: 'March',
-  3: 'April',
-  4: 'May',
-  5: 'June',
-  6: 'July',
-  7: 'August',
-  8: 'September',
-  9: 'October',
-  10: 'November',
-  11: 'December'
-}
+  0: "January",
+  1: "February",
+  2: "March",
+  3: "April",
+  4: "May",
+  5: "June",
+  6: "July",
+  7: "August",
+  8: "September",
+  9: "October",
+  10: "November",
+  11: "December",
+};

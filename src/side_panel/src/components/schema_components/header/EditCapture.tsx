@@ -5,6 +5,8 @@ export const EditCaptureHeader: React.FC<SchemaFormProps> = ({
     modelReducerObject,
   }) => {
     /* FETCH PROJECT NAME AND CAPTURE NAME FROM USER CONTENT MODEL */
+
+    
     return (
       <>
         <h3>Edit Capture</h3>
@@ -21,7 +23,7 @@ export const EditCaptureHeader: React.FC<SchemaFormProps> = ({
           </label>
           <input
             type="text"
-            value={formModel.name}
+            value={formModel?.name ?? ''}
             onChange={(e) => {
               modelReducerObject.update("name", e.target.value);
             }}
@@ -31,13 +33,13 @@ export const EditCaptureHeader: React.FC<SchemaFormProps> = ({
   
         <div className={styles.content_line}>
           <p>
-            <b>Schema: {formModel.schema_id}</b>{" "}
+            <b>Schema: {formModel?.schema_id ?? ''}</b>{" "}
           </p>
         </div>
   
         <div className={styles.content_line}>
           <p>
-            <b>Project: {formModel.project_id} </b>{" "}
+            <b>Project: {formModel?.project_id ?? ''} </b>{" "}
           </p>
         </div>
   

@@ -1,4 +1,11 @@
-import { useContext, useMemo, useRef } from "react";
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import ToastContext from "../../../context/Toast";
 import {
   AddButton,
@@ -7,6 +14,7 @@ import {
 import * as styles from "./SchemaTable.module.css";
 import { AppDropdown } from "../../../../../shared/src/components/dropdownSelector/AppDropdown";
 import { AppButtonTemplate } from "../../../../../shared/src/components/buttons/appButton";
+import ExtensionContext from "../../../context/ExtensionObjects";
 
 /**
  * Generic helper function to fetch matching elements from the DOM
@@ -30,30 +38,28 @@ const fetchValue = (
  *
  * Each row contains state related to an individual item. Changes to these items will
  * call an update for the global  modelReducerObject.
- * 
- * When the user saves changes, the current schema object in the Table will  be taken 
+ *
+ * When the user saves changes, the current schema object in the Table will  be taken
  * and used to update the User Content Model as a batch.
  */
 export const SchemaTable: React.FC<SchemaFormTableProps> = ({
   operation,
   formModel,
   modelReducerObject,
+  focusedCell,
 }) => {
   const objectType = useMemo(() => {
     return formModel.capture_body ? "capture_body" : "schema";
   }, []);
 
-  const [, setToastState] = useContext(ToastContext);
-
   /**
    * Changing content of the schema model in the component will cause continous
-   * fetches from the DOM and internal state updates. Therefore we throttle the 
+   * fetches from the DOM and internal state updates. Therefore we throttle the
    * amount of requqests for updates by keeping track of a  set timeout callback.
    *
    */
-  const fetchTimerRef = useRef(null);
+  const fetchTimerRef = useRef<NodeJS.Timeout>(null);
   const fetchInProgressRef = useRef(false);
-
 
   const handleChange = (
     inputRef: React.Ref<HTMLInputElement>,
@@ -68,7 +74,12 @@ export const SchemaTable: React.FC<SchemaFormTableProps> = ({
         resolve();
         return;
       }
-      clearTimeout(fetchTimerRef.current);
+
+      if (!inputRef || !inputRef.current) {
+        reject();
+        return;
+      }
+      clearTimeout(fetchTimerRef?.current ?? undefined);
 
       // RESET INPUT RE STYLE
       inputRef.current.style.border = "";
@@ -100,6 +111,7 @@ export const SchemaTable: React.FC<SchemaFormTableProps> = ({
               matchExpression;
             formModel[objectType][key][valueEdited]["match_type"] = matchType;
             formModel[objectType][key][valueEdited]["matched_value"] = value;
+
             modelReducerObject.update(objectType, formModel[objectType]);
             fetchInProgressRef.current = false;
             resolve();
@@ -110,7 +122,6 @@ export const SchemaTable: React.FC<SchemaFormTableProps> = ({
           fetchValue(matchExpression, matchType)
             .then((newValue) => {
               // Update model
-
               formModel[objectType][key][valueEdited]["match_expression"] =
                 matchExpression;
               formModel[objectType][key][valueEdited]["match_type"] = matchType;
@@ -162,60 +173,92 @@ export const SchemaTable: React.FC<SchemaFormTableProps> = ({
   };
 
   /**
-   * Delete row, schemEntry
+   * Delete row
    */
-  const handleDelete = (key: string) => {
-
-    // Key is the entry, vaue edited is either schema key or schema  value, match property is instantiated values for each key
-    delete formModel[objectType][key];
-
-    // Update model reducer
-    modelReducerObject.update(objectType, formModel[objectType]);
+  const handleDelete = (entryId: string) => {
+    modelReducerObject.deleteRow(entryId);
   };
 
+  // Add new row and change cell focus
   const handleAdd = () => {
-    // Empty entry
-    let newId = crypto.randomUUID();
+    modelReducerObject.addNewRow();
+  };
 
-    // Check if id already exists
-    while (formModel[objectType][newId]) {
-      newId = crypto.randomUUID();
+  // Change focussed cell
+  const handleFocus = (cellId: string) => {
+    modelReducerObject.focusOnCell(cellId);
+  };
+
+  // Move to next cell
+  const handleMove = (command: string) => {
+    modelReducerObject.moveFocusedCell(command);
+  };
+
+  // Key press
+  useEffect(() => {
+    function handleEnter(e) {
+      if (e.key.toLowerCase() === "enter") {
+        modelReducerObject.moveFocusedCell("next");
+      }
     }
 
-    formModel[objectType][newId] = {
-      id: newId,
-      key: {
-        match_expression: "",
-        match_type: "manual",
-        match_value: "",
-      },
-      value: {
-        match_expression: "",
-        match_type: "id",
-        match_value: "",
-      },
-    };
+    document.addEventListener("keyup", handleEnter);
 
-    // Update model reducer
-    modelReducerObject.update(objectType, formModel[objectType]);
-  };
+    return () => {
+      document.removeEventListener("keyup", handleEnter);
+    };
+  }, []);
+
+  // Listen to send data options from page
+  const [tab, port] = useContext(ExtensionContext);
+  useEffect(() => {
+    if (port) {
+      port.onMessage.addListener((message: BackendMessage) => {
+        if (message.operation === "sendDOMData") {
+          const { data } = message;
+
+          if (data.type === "fetchOne") {
+            modelReducerObject.updateCurrentCell(data);
+          }
+        }
+      });
+    }
+  }, []);
+
+  // Add new row if create schema
+  useEffect(() => {
+    if (operation === "create_schema") {
+      handleAdd();
+    } else if (operation === "edit_schema") {
+      /**
+       * Defer operatino because internally the cell focus tracker is initialised using useEffect.
+       * Therefore need to defer until fully initiliazed state
+       */
+      setTimeout(() => {
+        modelReducerObject.moveFocusedCell("last");
+      }, 1);
+    }
+  }, []);
 
   return (
     <>
-      {formModel[objectType] && (
+      {formModel && (
         <table className={styles.table_outer}>
           <thead>
             <td>Key</td>
             <td>Value</td>
           </thead>
           <tbody className={styles.table_body}>
-            {Object.values(formModel[objectType]).map((entry) => {
+            {Object.values(formModel[objectType]).map((entry: SchemaEntry) => {
               return (
                 <TableRowTemplate
-                  index={entry.id}
+                  entryId={entry.id}
                   entry={entry}
                   handleChange={handleChange}
                   handleDelete={handleDelete}
+                  handleFocus={handleFocus}
+                  handleMove={handleMove}
+                  focusedCell={focusedCell}
                   operation={operation}
                 />
               );
@@ -242,8 +285,11 @@ const TableRowTemplate = ({
   operation,
   handleChange,
   handleDelete,
+  handleFocus,
+  handleMove,
+  focusedCell,
   entry,
-  index,
+  entryId,
 }) => {
   const [, setToastState] = useContext(ToastContext);
 
@@ -255,21 +301,31 @@ const TableRowTemplate = ({
   const matchedKeyRef = useRef(null);
   const matchedValueRef = useRef(null);
 
-
   return (
-    <tr className={styles.schema_row_container} key={index}>
-      <td className={styles.schema_key_container}>
+    <tr className={styles.schema_row_container} key={entryId}>
+      {/* ASSIGN CELL ID AS ROW ID AND KEY OR VALUE */}
+      <td
+        className={styles.schema_key_container}
+        style={{
+          border: focusedCell === `${entryId}-key` ? "solid 1px red" : "none",
+        }}
+        id={`${entryId}-key`}
+        onClick={() => {
+          handleFocus(`${entryId}-key`);
+        }}
+      >
         <div className={styles.match_expression_container}>
           <input
             ref={keyRef}
             type="text"
             value={entry.key.match_expression}
-            maxLength={20}
+            maxLength={40}
+            autoFocus={focusedCell === `${entryId}-key` ? true : false}
             onChange={(e) => {
               handleChange(
                 matchedKeyRef,
                 e.target.value,
-                entry.id,
+                entryId,
                 "key",
                 "match_expression"
               );
@@ -282,7 +338,7 @@ const TableRowTemplate = ({
               handleChange(
                 matchedKeyRef,
                 e.target.value,
-                entry.id,
+                entryId,
                 "key",
                 "match_type"
               );
@@ -290,19 +346,27 @@ const TableRowTemplate = ({
           ></AppDropdown>
         </div>
         <div>
-          e.g.:
           <p className={styles.example_match_container} ref={matchedKeyRef}>
             {entry.key.matched_value}
           </p>
         </div>
       </td>
-      <td>
+      <td
+        id={`${entryId}-value`}
+        style={{
+          border: focusedCell === `${entryId}-value` ? "solid 1px red" : "none",
+        }}
+        onClick={() => {
+          handleFocus(`${entryId}-value`);
+        }}
+      >
         <div className={styles.match_expression_container}>
           <input
             ref={valueRef}
             type="text"
             value={entry.value.match_expression}
-            maxLength={20}
+            maxLength={100}
+            autoFocus={focusedCell === `${entryId}-value` ? true : false}
             onChange={(e) => {
               /* Returns a promise */
               handleChange(
@@ -321,7 +385,7 @@ const TableRowTemplate = ({
               handleChange(
                 valueRef,
                 e.target.value,
-                entry.id,
+                entryId,
                 "value",
                 "match_type"
               );

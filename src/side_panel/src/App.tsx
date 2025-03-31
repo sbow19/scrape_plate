@@ -4,73 +4,93 @@
 import { SidePanelTemplate } from "./components/side_panel_template";
 import { SchemaFormTemplate } from "./components/schema_form_template";
 import { useRef, useState } from "react";
+import ExtensionContext from "./context/ExtensionObjects";
 
 export const App = () => {
-  // Listen for messages from backend, here the reason for
-  const eventLisRef = useRef(false);
+  // Prevent multiple invocations of chrome listeners being added
+  const loadRef = useRef(false);
 
-  const [isLoaded, setIsLoaded] = useState(false)
-  const [operationMethod, setOperationMethod] = useState< "create_schema" | "edit_schema" | "edit_capture">('create_schema');
-  const [modelType, setModelType] = useState<'capture' | 'schema'>('capture')
-  const [model, setModel] = useState<Schema | Capture | Schema[] | null>(null)
+  // Conditional load
+  const [isLoaded, setIsLoaded] = useState(false);
 
-  // Global url 
-  const urlRef = useRef('')
+  // Determine which content to show
+  const [operationMethod, setOperationMethod] = useState<
+    "create_schema" | "edit_schema" | "edit_capture"
+  >("create_schema");
 
+  // Which type of Schema Model: Capture or Schema
+  const [modelType, setModelType] = useState<"capture" | "schema">("capture");
 
-  if(!eventLisRef.current) {
-    eventLisRef.current = true;
+  // Set model or models. May be sent in open side panel request
+  const [model, setModel] = useState<Schema | Capture | Schema[] | null>(null);
 
-    chrome.runtime.onMessage.addListener((message: BackendMessage)=>{
-      if(message.operation === 'openSidePanel'){
+  // Set chrome tab details. Useful for url and id data.
+  const [currentTab, setTab] = useState<chrome.tabs.Tab | null>(null);
 
-        const {schema, tab, method} = message.data
+  // Set port for communicating with content script
+  const [port, setPort] = useState<chrome.runtime.Port | null>(null);
 
-        setOperationMethod(method)
+  if (!loadRef.current) {
+    loadRef.current = true;
 
-        if(schema){
-          setModel(schema)
+    chrome.runtime.onMessage.addListener((message: BackendMessage) => {
+      if (message.operation === "openSidePanel") {
+        const { schema, tab, method } = message.data;
+
+        // Operation determines whether to use capture or schema table
+        setOperationMethod(method);
+
+        if (schema) {
+          setModel(schema);
         }
-        
-        if(method === 'edit_capture'){
-          setModelType(prev=>'capture')
+
+        if (method === "edit_capture") {
+          setModelType("capture");
         } else {
-          setModelType(prev=>'schema')
+          setModelType("schema");
         }
 
-        if(tab){
-          urlRef.current = tab.url
+        if (tab) {
+          setTab(tab);
+          // Set up port to listen to content scruipt. Solution here https://stackoverflow.com/questions/54181734/chrome-extension-message-passing-unchecked-runtime-lasterror-could-not-establi
+          const port = chrome.tabs.connect(tab?.id ?? 0);
+          setPort(port);
 
-          console.log(urlRef)
+          port.onMessage.addListener((message) => {
+            console.log(message);
+          });
+  
         }
-
-        setIsLoaded(prev=>true)
+        // Render content when loaded
+        setIsLoaded(true);
       }
-    })
+    });
   }
 
   return (
     <div
-        style={{
-            height: '95vh',
-            minHeight: 680,
-            width: '100%',
-            maxWidth: 400,
-            position: 'relative',
-            pointerEvents: 'none'
-        }}
+      style={{
+        height: "95vh",
+        minHeight: 680,
+        width: "100%",
+        maxWidth: 400,
+        position: "relative",
+        pointerEvents: "none",
+      }}
     >
-      <SidePanelTemplate>
-        {
-          isLoaded? <SchemaFormTemplate
-          modelType={modelType}
-          model={model}
-          operation={operationMethod}
-          currentURL={urlRef.current}
-        /> : <></>
-        }
-        
-      </SidePanelTemplate>
+      <ExtensionContext.Provider value={[currentTab, port]}>
+        <SidePanelTemplate>
+          {isLoaded ? (
+            <SchemaFormTemplate
+              modelType={modelType}
+              model={model}
+              operation={operationMethod}
+            />
+          ) : (
+            <></>
+          )}
+        </SidePanelTemplate>
+      </ExtensionContext.Provider>
     </div>
   );
 };

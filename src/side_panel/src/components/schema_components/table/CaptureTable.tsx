@@ -100,6 +100,7 @@ const TableRowTemplate = ({ operation, handleChange, handleDelete, entry, index 
         <EditButton
           height={20}
           width={20}
+          title="Edit"
           onClick={() => {
             valueRef.current.focus();
           }}
@@ -109,6 +110,7 @@ const TableRowTemplate = ({ operation, handleChange, handleDelete, entry, index 
         <DeleteButton
           height={20}
           width={20}
+          title="Delete"
           onClick={() => {
             setToastState({
               open: true,
