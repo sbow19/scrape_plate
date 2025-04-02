@@ -22,7 +22,6 @@ import UserContent from "../../../shared/src/state/state";
 import useContent from "../../../shared/src/hooks/useContent";
 import { openSidePanel } from "../utils/chromeMessaging";
 import TabContext from "../context/Tab";
-import PortContext from "../context/Port";
 
 export const HomeView = () => {
   const [isLoaded, setIsLoaded] = useState(false);

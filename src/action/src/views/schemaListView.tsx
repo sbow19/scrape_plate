@@ -80,7 +80,6 @@ const SecondaryActions = () => {
     <div className={styles.button_container}>
       <AppButtonTemplate
         textStyle={{
-          fontSize: 14,
           color: "black",
         }}
         onClick={()=>{
@@ -92,7 +91,7 @@ const SecondaryActions = () => {
           });
         }}
       >
-        Create Schema
+        New
       </AppButtonTemplate>
     </div>
   );

@@ -12,12 +12,16 @@
 }
 
 .project_info_container {
-    height: 50%;
+    height: 25%;
     width:100%;
     align-items: center;
     flex-direction: column;
     display:flex;
     justify-content: space-around;
+}
+
+.project_info_container h3{
+    font-size: 1.5rem;
 }
 
 .last_edited, .created_at, .project_name_container {
@@ -26,11 +30,12 @@
 }
 
 .project_name_container {
-    display: flex
+    display: flex;
+    justify-content: center;
 }
 
 .table_container {
-    height: 100%; /* or any height you want */
+    height: 75%;
     overflow-y: auto;
     display: block;
     width: 100%; 

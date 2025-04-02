@@ -10,6 +10,8 @@ export const AppButtonTemplate: React.FC<AppButtonProps> = ({
     buttonStyle,
     title
 })=>{
+
+
     return(
         <>
             <button

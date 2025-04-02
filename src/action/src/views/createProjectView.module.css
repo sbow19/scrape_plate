@@ -8,6 +8,10 @@
     justify-content: center;
 }
 
+.form_container h3 {
+    font-size: 1.5rem;
+}
+
 .button_container {
     /*LAYOUT*/
     height: 85%;

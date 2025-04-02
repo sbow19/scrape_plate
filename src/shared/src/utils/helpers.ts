@@ -411,7 +411,7 @@ export function tableDataConverter(
   switch (type) {
     case "captureList": {
       return {
-        header: ["name", "url", "date captured"],
+        header: ["Name", "URL", "Date Captured"],
         data: data.map((capture: Capture) => {
           return [
             capture.id,
@@ -424,14 +424,14 @@ export function tableDataConverter(
     }
     case "capture":
       return {
-        header: ["key", "value"],
+        header: ["Key", "Value"],
         data: data.map((capture: SchemaEntry) => {
           return [capture.id, capture.key.matched_value, capture.value.matched_value];
         }),
       };
     case "projectList":
       return {
-        header: ["name", "date created", "last edited"],
+        header: ["Name", "Date Created", "Last Edited"],
         data: data.map((project: ProjectGroup) => {
           return [
             project.id,
@@ -444,7 +444,7 @@ export function tableDataConverter(
     case "schemaMatchList": {
       const dataTyped = data as Schema[];
       return {
-        header: ["name", "url match"],
+        header: ["Name", "URL Match"],
         data: dataTyped.map((schema) => {
           return [schema.id, schema.name, schema.url_match];
         }),
@@ -452,7 +452,7 @@ export function tableDataConverter(
     }
     case "schemaList":
       return {
-        header: ["name", "url_match"],
+        header: ["Name", "URL_Match"],
         data: data.map((schema: Schema) => {
           return [schema.id, schema.name, schema.url_match];
         }),
@@ -462,7 +462,7 @@ export function tableDataConverter(
      */
     case "schema":
       return {
-        header: ["key", "type", "value", "type"],
+        header: ["Key", "Type", "Value", "Type"],
         data: data.map((schema: SchemaEntry) => {
           return [
             schema.id,

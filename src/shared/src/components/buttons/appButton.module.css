@@ -3,13 +3,13 @@
     border-radius: 20px;
     background-color: var(--white);
     box-shadow: 1px 2px 3px 1px var(--secondary);
-    font-size: 1rem;
+    font-size: 0.75rem;
     font-weight: 600;
 
     /* LAYOUT */
-    height: 40px;
-    min-width: 100px;
-    max-width: 100px;
+    height: 30px;
+    min-width: 80px;
+    max-width: 80px;
     padding: 5px 2px;
     display: flex;
     justify-content: center;

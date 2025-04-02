@@ -295,6 +295,7 @@ declare global {
      * Background
      */
     svgFill?: string;
+    buttonStyle?: {} | undefined
   };
 
   type AppButtonProps = {
@@ -346,7 +347,7 @@ declare global {
     /**
      * CSS Module outside button template
      */
-    buttonStyle?: string;
+    buttonStyle?: {};
   };
 
   type SchemaFormTemplateProps = {

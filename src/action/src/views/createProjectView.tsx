@@ -122,12 +122,11 @@ const SecondaryActions = ({ projectName }) => {
     <div className={styles.button_container}>
       <AppButtonTemplate
         textStyle={{
-          fontSize: 14,
           color: "#006400",
         }}
         onClick={handleCreateProject}
       >
-        Create Project
+        Create
       </AppButtonTemplate>
     </div>
   );

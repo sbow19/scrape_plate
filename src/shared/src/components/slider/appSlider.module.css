@@ -28,6 +28,12 @@
     overflow: hidden;
     transition: transform 0.3s ease;
     cursor: pointer;
+    color: black;
+    font-weight: 600;
+}
+
+.highlighted {
+    color: var(--white);
 }
 
 .individual_selector:hover {

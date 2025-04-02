@@ -117,14 +117,16 @@ const ContentComponent = ({
             />
           </h3>
           <EditButton
+          pathFill="none"
+          strokeColor="black"
             height={20}
             width={20}
             onClick={handleFocus}
             title="Edit Name"
           />
         </div>
-        <div className={styles.created_at}>
-          <h3>URL Match: {schemaDetails.url_match}</h3>
+        <div className={styles.url_match}>
+          <b>URL Match:</b> {schemaDetails.url_match}
         </div>
         <div className={styles.table_title}>Schema Details</div>
       </div>
@@ -269,7 +271,6 @@ const SecondaryActions = ({ schemaDetails }) => {
     <div className={styles.button_container}>
       <AppButtonTemplate
         textStyle={{
-          fontSize: 14,
           color: "#fb3640ff",
         }}
         onClick={handleDeleteSchema}
@@ -277,21 +278,18 @@ const SecondaryActions = ({ schemaDetails }) => {
         Delete
       </AppButtonTemplate>
       <AppButtonTemplate
-        textStyle={{
-          fontSize: 14,
-        }}
+
         onClick={handleEditSchema}
       >
         Edit
       </AppButtonTemplate>
       <AppButtonTemplate
         textStyle={{
-          fontSize: 14,
           color: "#006400",
         }}
         onClick={handleSaveSchema}
       >
-        Save Changes
+        Save
       </AppButtonTemplate>
     </div>
   );

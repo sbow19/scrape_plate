@@ -23,7 +23,7 @@ export const ButtonSlider: React.FC<ButtonSliderProps> = ({
                 selectorData.map((selectorData, index)=>{
                     return(
                     <div
-                        className={styles.individual_selector}
+                        className={`${styles.individual_selector} ${index === selectedIndex ? styles.highlighted : ""}`}
                         key={index}
                         onClick={()=>{
                             setSelectedIndex(index)

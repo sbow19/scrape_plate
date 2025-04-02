@@ -291,7 +291,6 @@ const SecondaryActions = ({ projectDetails }) => {
     <div className={styles.button_container}>
       <AppButtonTemplate
         textStyle={{
-          fontSize: 14,
           color: "#fb3640ff",
         }}
         onClick={handleDeleteProject}
@@ -299,21 +298,17 @@ const SecondaryActions = ({ projectDetails }) => {
         Delete
       </AppButtonTemplate>
       <AppButtonTemplate
-        textStyle={{
-          fontSize: 14,
-        }}
         onClick={handleExportProject}
       >
         Export
       </AppButtonTemplate>
       <AppButtonTemplate
         textStyle={{
-          fontSize: 14,
           color: "#006400",
         }}
         onClick={handleSaveProject}
       >
-        Save Changes
+        Save
       </AppButtonTemplate>
     </div>
   );

@@ -158,7 +158,7 @@ export const AppTableTemplate: React.FC<AppTableProps> = ({
             {/**
              * Options button optional if at least one is enabled
              */}
-            {options ? <th key={"options_header"}>options</th> : null}
+            {options ? <td key={"options_header"}>Options</td> : null}
           </thead>
           <tbody className={styles.table_body}>
             {tableData.data.map((row, index) => {
@@ -185,8 +185,8 @@ export const AppTableTemplate: React.FC<AppTableProps> = ({
                     <td className={styles.options_container}>
                       {options?.enableSet && (
                         <AddButton
-                          height={25}
-                          width={25}
+                          height={20}
+                          width={20}
                           strokeColor="black"
                           onClick={() => handleSetCurrentProject(row)}
                           title="Set As Current Project"
@@ -194,8 +194,8 @@ export const AppTableTemplate: React.FC<AppTableProps> = ({
                       )}
                       {options?.enableEdit && (
                         <EditButton
-                          height={25}
-                          width={25}
+                          height={20}
+                          width={20}
                           strokeColor="black"
                           pathFill="none"
                           onClick={() => {
@@ -206,8 +206,8 @@ export const AppTableTemplate: React.FC<AppTableProps> = ({
                       )}
                       {options?.enableDelete && (
                         <DeleteButton
-                          height={25}
-                          width={25}
+                          height={20}
+                          width={20}
                           strokeColor="black"
                           pathFill="none"
                           onClick={() => handleDeleteEntry(row)}

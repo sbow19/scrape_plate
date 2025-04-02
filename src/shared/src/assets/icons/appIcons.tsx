@@ -8,9 +8,10 @@ export const ExitButton: React.FC<IconProps> = ({
   svgFill,
   strokeColor,
   title,
+  buttonStyle
 }) => {
   return (
-    <ButtonWrapper onClick={onClick} title={title}>
+    <ButtonWrapper onClick={onClick} title={title} buttonStyle={buttonStyle}>
       <svg
         aria-hidden="true"
         xmlns="http://www.w3.org/2000/svg"
@@ -273,7 +274,8 @@ const ButtonWrapper: React.FC<ButtonWrapperProps> = ({
   return (
     <button
       onClick={onClick}
-      className={buttonStyle ? buttonStyle : styles.icon_button}
+      className={styles.icon_button}
+      style={buttonStyle}
       title={title}
     >
       {children}

@@ -129,10 +129,10 @@ const ContentComponent = ({ captureDetails, setCaptureDetails, setIsLoaded, isLo
           />
         </div>
         <div className={styles.created_at}>
-          Created At: {convertISOToDate(captureDetails.date_created)}
+          <b>Created At:</b> {convertISOToDate(captureDetails.date_created)}
         </div>
         <div className={styles.last_edited}>
-          Last Edited: {convertISOToDate(captureDetails.last_edited)}
+          <b>Last Edited:</b> {convertISOToDate(captureDetails.last_edited)}
         </div>
         <div className={styles.table_title}>Captured Data</div>
       </div>
@@ -312,7 +312,6 @@ const SecondaryActions = ({ captureDetails }) => {
     <div className={styles.button_container}>
       <AppButtonTemplate
         textStyle={{
-          fontSize: 14,
           color: "#fb3640ff",
         }}
         onClick={handleDeleteCapture}
@@ -320,21 +319,17 @@ const SecondaryActions = ({ captureDetails }) => {
         Delete
       </AppButtonTemplate>
       <AppButtonTemplate
-        textStyle={{
-          fontSize: 14,
-        }}
         onClick={handleExportCapture}
       >
         Export
       </AppButtonTemplate>
       <AppButtonTemplate
         textStyle={{
-          fontSize: 14,
           color: "#006400",
         }}
         onClick={handleSaveCapture}
       >
-        Save Changes
+        Save
       </AppButtonTemplate>
     </div>
   );

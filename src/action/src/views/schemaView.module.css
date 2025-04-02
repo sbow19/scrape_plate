@@ -13,7 +13,8 @@
     overflow: hidden;
     border-radius: 10px;
     background-color: var(--primary);
-    justify-content: space-around;
+    justify-content: center;
+    column-gap: 20px;
 }
 
 .project_info_container {
@@ -25,13 +26,31 @@
     justify-content: space-around;
 }
 
-.last_edited, .created_at, .project_name_container {
+.last_edited, .url_match, .project_name_container {
     text-align: left;
-    width:50%
+    width:65%;
+    font-size: 1rem;
+
+}
+
+.url_match b {
+    padding-right: 10px;
+    font-weight: 600;
+
 }
 
 .project_name_container {
     display: flex
+}
+
+.project_name_container h3 {
+    font-size: 0.9rem;
+}
+
+.table_title {
+    font-weight: 600;
+    font-size: 0.9rem;
+
 }
 
 .table_container {

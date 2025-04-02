@@ -38,7 +38,14 @@
 }
 
 .toast_text_section {
-    flex: 2
+    flex: 2;
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    font-size: 1.1rem;
+    overflow: hidden;
+    max-height: 240px;
+    max-width: 220px
 
 }
 
@@ -47,5 +54,6 @@
     display: flex;
     justify-content: center;
     column-gap: 20px;
+    align-items: end;
 
 }

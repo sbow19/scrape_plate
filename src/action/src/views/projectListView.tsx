@@ -113,23 +113,19 @@ const SecondaryActions = ({projectList}) => {
   return (
     <div className={styles.button_container}>
        <AppButtonTemplate
-        textStyle={{
-          fontSize: 14,
-        }}
         onClick={handleExportProject}
       >
         Export
       </AppButtonTemplate>
       <AppButtonTemplate
         textStyle={{
-          fontSize: 14,
           color: "black",
         }}
         onClick={() => {
           navigate("/project/create");
         }}
       >
-        Create Project
+        New
       </AppButtonTemplate>
     </div>
   );
