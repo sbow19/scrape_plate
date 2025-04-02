@@ -42,6 +42,80 @@ chrome.runtime.onMessage.addListener(
             dbResult
           );
 
+          // Update matching schemas here
+          if (message.data.type === "schema") {
+            let currentTab: chrome.tabs.Tab = null;
+            // Get tab information
+            getCurrentTab()
+              .then((currentTabSearch) => {
+                if (!currentTabSearch) return;
+
+                currentTab = currentTabSearch;
+                // Get schemas
+                return IndexedDBOperations.handleQuery({
+                  method: "read",
+                  type: "schema",
+                });
+              })
+              .then((dbResult) => {
+                if (!dbResult?.success || !currentTab) return;
+
+                const schemaResult = dbResult.data as {
+                  [key: string]: Schema;
+                };
+
+                const matchingSchemas = getMatchingSchemas(
+                  schemaResult,
+                  currentTab.url
+                );
+
+                if (matchingSchemas.length === 0) {
+                  chrome.action.setBadgeText({
+                    tabId: currentTab.id,
+                    text: "",
+                  });
+                } else if (matchingSchemas.length > 0) {
+                  // Trigger action animation if to alert user if there is a matching schema
+                  chrome.action.setBadgeText({
+                    tabId: currentTab.id,
+                    text: "Hit",
+                  });
+                  chrome.action.setBadgeBackgroundColor({
+                    tabId: currentTab.id,
+                    color: "#0F0",
+                  });
+
+                  // Set Context menus for Captureview/edit for this tab
+                  // ASSUMPTION: context menu callback will outlast the
+                  // lifetime of the background script.
+                  // ASSUMPTION: The callback will run such that the sidepanel code is
+                  // able to actually catch the message signal
+
+                  chrome.contextMenus.create({
+                    title: "View/edit schema",
+                    contexts: ["page"],
+                    id: "edit_schema",
+                  });
+
+                  chrome.contextMenus.create({
+                    title: "Capture page",
+                    contexts: ["page"],
+                    id: "edit_capture",
+                  });
+                }
+
+                // Save matching schemas in database
+                return IndexedDBOperations.handleQuery({
+                  method: "update",
+                  type: "schemaMatches",
+                  data: matchingSchemas,
+                });
+              })
+              .catch((error) => {
+                console.log(error, "On activated schema checks");
+              });
+          }
+
           sendResponse(backendResponse);
         })
         .catch((dbResult) => {
@@ -152,7 +226,6 @@ chrome.tabs.onUpdated.addListener((tabId: number) => {
   // Get tab information
   getCurrentTab()
     .then((currentTabSearch) => {
-      console.log(currentTabSearch)
       if (!currentTabSearch) return;
       currentTab = currentTabSearch;
 
@@ -174,7 +247,6 @@ chrome.tabs.onUpdated.addListener((tabId: number) => {
 
       const matchingSchemas = getMatchingSchemas(schemaResult, currentTab.url);
 
-
       if (matchingSchemas.length === 0) {
         chrome.action.setBadgeText({
           tabId: currentTab.id,
@@ -189,6 +261,18 @@ chrome.tabs.onUpdated.addListener((tabId: number) => {
         chrome.action.setBadgeBackgroundColor({
           tabId: currentTab.id,
           color: "#0F0",
+        });
+
+        chrome.contextMenus.create({
+          title: "View/edit schema",
+          contexts: ["page"],
+          id: "edit_schema",
+        });
+
+        chrome.contextMenus.create({
+          title: "Capture page",
+          contexts: ["page"],
+          id: "edit_capture",
         });
       }
 
@@ -246,64 +330,76 @@ chrome.contextMenus.onClicked.addListener(
                   schema: {
                     name: "",
                     id: "",
-                    url_match: tab.url,
+                    url_match: tab?.url ?? "",
                     schema: {},
                   },
+                  tab: tab,
                 },
               };
-              chrome.runtime.sendMessage(sidePanelMessage);
+              setTimeout(() => {
+                chrome.runtime.sendMessage(sidePanelMessage);
+              }, 500);
             }
           );
         }
         break;
       case "edit_schema":
         {
-          IndexedDBOperations.handleQuery({
-            type: "schemaMatches",
-            method: "read",
-          }).then((dbResult) => {
-            chrome.sidePanel.open(
-              {
-                tabId: tab.id,
-              },
-              () => {
+          // open side panel first then send message with the schema data
+          // to avoid user gesture event handling timing issues
+          chrome.sidePanel.open(
+            {
+              tabId: tab.id,
+            },
+            () => {
+              IndexedDBOperations.handleQuery({
+                type: "schemaMatches",
+                method: "read",
+              }).then((dbResult) => {
                 // Callback should run to sned data for screen
                 const sidePanelMessage: BackendResponse = {
                   operation: "openSidePanel",
                   data: {
                     method: "edit_schema",
-                    schema: dbResult.data["schemaMatches"],
+                    schema: dbResult.data,
+                    tab: tab,
                   },
                 };
-                chrome.runtime.sendMessage(sidePanelMessage);
-              }
-            );
-          });
+                setTimeout(() => {
+                  chrome.runtime.sendMessage(sidePanelMessage);
+                }, 250);
+              });
+            }
+          );
         }
+
         break;
-      case "capture_body":
+      case "edit_capture":
         {
-          IndexedDBOperations.handleQuery({
-            type: "schemaMatches",
-            method: "read",
-          }).then((dbResult) => {
-            chrome.sidePanel.open(
-              {
-                tabId: tab.id,
-              },
-              () => {
+          chrome.sidePanel.open(
+            {
+              tabId: tab.id,
+            },
+            () => {
+              IndexedDBOperations.handleQuery({
+                type: "schemaMatches",
+                method: "read",
+              }).then((dbResult) => {
                 // Callback should run to sned data for screen
                 const sidePanelMessage: BackendResponse = {
                   operation: "openSidePanel",
                   data: {
                     method: "edit_capture",
-                    schema: dbResult.data["schemaMatches"],
+                    schema: dbResult.data,
+                    tab: tab,
                   },
                 };
-                chrome.runtime.sendMessage(sidePanelMessage);
-              }
-            );
-          });
+                setTimeout(() => {
+                  chrome.runtime.sendMessage(sidePanelMessage);
+                }, 250);
+              });
+            }
+          );
         }
         break;
     }
@@ -360,7 +456,12 @@ chrome.commands.onCommand.addListener((command, tab) => {
             operation: "openSidePanel",
             data: {
               method: "create_schema",
-              schema: null,
+              schema: {
+                name: "",
+                id: "",
+                url_match: tab?.url ?? "",
+                schema: {},
+              },
               tab: tab,
             },
           };
@@ -372,14 +473,66 @@ chrome.commands.onCommand.addListener((command, tab) => {
       );
       break;
     case "edit_capture":
-      chrome.sidePanel.open({
-        tabId: tab?.id ?? 0,
-      });
+      {
+        // open side panel first then send message with the schema data
+        // to avoid user gesture event handling timing issues
+        chrome.sidePanel.open(
+          {
+            tabId: tab.id,
+          },
+          () => {
+            IndexedDBOperations.handleQuery({
+              type: "schemaMatches",
+              method: "read",
+            }).then((dbResult) => {
+              // Callback should run to sned data for screen
+              const sidePanelMessage: BackendResponse = {
+                operation: "openSidePanel",
+                data: {
+                  method: "edit_capture",
+                  schema: dbResult.data,
+                  tab: tab,
+                },
+              };
+              setTimeout(() => {
+                chrome.runtime.sendMessage(sidePanelMessage);
+              }, 250);
+            });
+          }
+        );
+      }
+
       break;
     case "edit_schema":
-      chrome.sidePanel.open({
-        tabId: tab?.id ?? 0,
-      });
+      {
+        // open side panel first then send message with the schema data
+        // to avoid user gesture event handling timing issues
+        chrome.sidePanel.open(
+          {
+            tabId: tab.id,
+          },
+          () => {
+            IndexedDBOperations.handleQuery({
+              type: "schemaMatches",
+              method: "read",
+            }).then((dbResult) => {
+              // Callback should run to sned data for screen
+              const sidePanelMessage: BackendResponse = {
+                operation: "openSidePanel",
+                data: {
+                  method: "edit_schema",
+                  schema: dbResult.data,
+                  tab: tab,
+                },
+              };
+              setTimeout(() => {
+                chrome.runtime.sendMessage(sidePanelMessage);
+              }, 250);
+            });
+          }
+        );
+      }
+
       break;
     default:
       break;

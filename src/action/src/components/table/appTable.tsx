@@ -75,8 +75,16 @@ export const AppTableTemplate: React.FC<AppTableProps> = ({
                 };
 
                 break;
-            }
+              case "captureRow":
+                deleteCrud.type = "captureRow";
+                deleteCrud.data = {
+                  project_id: options.ownerId.project_id,
+                  capture_id: options.ownerId.capture_id,
+                  id: row[0],
+                };
 
+                break;
+            }
 
             userContentEvents
               ?.emit("delete", deleteCrud)

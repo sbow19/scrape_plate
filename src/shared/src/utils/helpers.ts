@@ -213,20 +213,20 @@ export function validateSchemaEntry(entryToValidate: SchemaEntry) {
   const { key, value } = entryToValidate;
   // Validate schema key value and value match value
   if (
-    (key.matched_value?.length ?? 0) > 20 ||
+    (key.matched_value?.length ?? 0) > 256 ||
     !valid_value_types.includes(typeof key.matched_value)
   ) {
     throw new Error(
-      "Schema key name invalid - must be a string of 20 characters or less"
+      "Schema key name invalid - must be a string of 100 characters or less"
     );
   }
 
   if (
-    (value.matched_value?.length ?? 0) > 20 ||
+    (value.matched_value?.length ?? 0) > 256 ||
     !valid_value_types.includes(typeof value.matched_value)
   ) {
     throw new Error(
-      "Schema value invalid - must be a string of 20 characters or less"
+      "Schema value invalid - must be a string of 100 characters or less"
     );
   }
 
@@ -245,20 +245,20 @@ export function validateSchemaEntry(entryToValidate: SchemaEntry) {
 
   // Validate the match expression
   if (
-    (key.match_expression?.length ?? 0) > 20 ||
+    (key.match_expression?.length ?? 0) >256 ||
     !valid_value_types.includes(typeof key.match_expression)
   ) {
     throw new Error(
-      "Schema key match expression invalid - must be a string of 20 characters or less"
+      "Schema key match expression invalid - must be a string of 256 characters or less"
     );
   }
 
   if (
-    (value.match_expression?.length ?? 0) > 20 ||
+    (value.match_expression?.length ?? 0) > 256 ||
     !valid_value_types.includes(typeof value.match_expression)
   ) {
     throw new Error(
-      "Schema value match expression invalid - must be a string of 20 characters or less"
+      "Schema value match expression invalid - must be a string of 256 characters or less"
     );
   }
 }
@@ -280,7 +280,7 @@ export function validateCRUDOptions(options: CRUDDataOptions): void {
   const { type, method, data } = options;
 
   // Check data type
-  const dataTypes = ["project", "schema", "capture", "details"];
+  const dataTypes = ["project", "schema", "capture", "details", "captureRow"];
   if (typeof type !== "string" || !dataTypes.includes(type))
     throw new TypeError("CRUD operation data type value incorrect");
 
@@ -426,7 +426,7 @@ export function tableDataConverter(
       return {
         header: ["key", "value"],
         data: data.map((capture: SchemaEntry) => {
-          return ["", capture.key.matched_value, capture.value.matched_value];
+          return [capture.id, capture.key.matched_value, capture.value.matched_value];
         }),
       };
     case "projectList":

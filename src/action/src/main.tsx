@@ -16,9 +16,9 @@ import { SchemaView } from "./views/schemaView.tsx";
 import { CaptureView } from "./views/captureView.tsx";
 import TabContext from "./context/Tab.tsx";
 import UserContent from "../../shared/src/state/state.ts";
+import PortContext from "./context/Port.tsx";
 
-UserContent.init()
-
+UserContent.init();
 
 const router = createBrowserRouter([
   {
@@ -64,13 +64,12 @@ createRoot(document.getElementById("root")!).render(
 function App() {
   // Get tab information from backend
   const [tab, setTab] = useState<chrome.tabs.Tab>(null);
+  const [port, setPort] = useState<chrome.runtime.Port>();
 
   const tabRef = useRef(false);
 
-
-
+  // Set up tab context
   useEffect(() => {
-
     if (!tabRef.current) {
       chrome.runtime
         .sendMessage({
@@ -79,16 +78,21 @@ function App() {
         })
         .then((response: BackendResponse) => {
           setTab(response.data);
-          tabRef.current  = true
+          tabRef.current = true;
+
+          const port = chrome.tabs.connect(response?.data?.id ?? 0);
+          setPort(port)
+
         })
         .catch(() => {});
     }
   }, []);
 
-  
   return (
-    <TabContext.Provider value={tab}>
-      <RouterProvider router={router} />
-    </TabContext.Provider>
+    <PortContext.Provider value={port}>
+      <TabContext.Provider value={tab}>
+        <RouterProvider router={router} />
+      </TabContext.Provider>
+    </PortContext.Provider>
   );
 }

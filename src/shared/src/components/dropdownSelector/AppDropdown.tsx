@@ -12,6 +12,8 @@ export const AppDropdown = ({ options, onChange, exportButton, set, data }) => {
   useEffect(()=>{
     setOption(set)
   }, [set])
+
+  
   return (
     <>
       <div className={styles.dropdown_container}>

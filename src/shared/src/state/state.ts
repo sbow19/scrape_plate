@@ -184,6 +184,7 @@ class UserContent {
           }
           return false;
         });
+
         return results;
       case "schema":
         // Match search term against schema name and id
@@ -410,7 +411,7 @@ class UserContent {
     // Compose background script message
     const backendMessage = messageFactory("database", options);
 
-    let dataType;
+    let dataType: string;
     switch (options.type) {
       case "capture":
         dataType = "captures";
@@ -423,6 +424,9 @@ class UserContent {
         break;
       case "schemaEntry":
         dataType = "schemaEntry";
+        break;
+      case "captureRow":
+        dataType = "captureRow";
         break;
     }
 
@@ -438,21 +442,30 @@ class UserContent {
               delete UserContent._userContentModel["projects"][
                 options.data.project_id
               ].captures[options.data.id];
-            } else if(dataType === "schemaEntry"){
+            } else if (dataType === "schemaEntry") {
               delete UserContent._userContentModel["schemas"][
                 options.data.schema_id
               ].schema[options.data.id];
-            }else {
+            } else if (dataType === "captureRow") {
+
+              delete UserContent._userContentModel["projects"][
+                options.data.project_id
+              ].captures[options.data.capture_id]["capture_body"][options.data.id]
+
+            } else {
               delete UserContent._userContentModel[dataType][options.data];
             }
 
             // Return database response
             resolve(response);
           } else if (!response.data.success) {
+
             reject(response);
           }
         })
-        .catch((error) => reject(error)); // Misc error
+        .catch((error) => {
+          reject(error)
+        }); // Misc error
     });
   }
 
@@ -464,6 +477,8 @@ class UserContent {
 
     // Compose background script message
     const backendMessage = messageFactory("database", options);
+
+ 
 
     // Created time
     const currentTime = new Date();
@@ -497,7 +512,7 @@ class UserContent {
             if (dataType === "captures") {
               UserContent._userContentModel["projects"][
                 options.data.project_id
-              ].captures[options.data.id] = options.data;
+              ].captures[options.data.capture_id] = options.data;
             } else if (dataType === "details") {
               UserContent._userContentModel[dataType] = options.data;
             } else {

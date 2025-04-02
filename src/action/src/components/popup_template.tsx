@@ -31,7 +31,7 @@ export const PopupTemplate: React.FC<PopupTemplateProps> = ({
           <div className={styles.popup_header_container}>
             <div className={styles.popup_header_logo_container}>
               <img
-                src="src/assets/web-scraper-128.png"
+                src="../../assets/web-scraper-128.png"
                 alt="Scraper"
                 className={styles.scrape_plate_logo}
               />

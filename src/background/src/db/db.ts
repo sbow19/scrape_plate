@@ -2,8 +2,6 @@
  * Indexed db API
  */
 
-import { deepClone } from "../../../shared/src/utils/helpers";
-
 class IndexedDBOperations {
   private static _db: IDBDatabase | null = null;
 
@@ -46,7 +44,7 @@ class IndexedDBOperations {
         );
       };
       // IMPLEMENT: When db initialized, trigger the action to show in toolbar
-      dbRequest.onsuccess = (ev) => {
+      dbRequest.onsuccess = () => {
         // Save db instance to global db
         IndexedDBOperations._db = dbRequest.result;
 
@@ -58,19 +56,28 @@ class IndexedDBOperations {
 
         const detailsStore = tx.objectStore("details");
 
-        const userContentDetails: UserContentDetails = {
-          hasUsedOnce: false,
-          last_used: "",
-          username: "",
-          currentProject: "",
-          updateRequired: false,
-        };
-        const addRequest = detailsStore.add(userContentDetails);
+        const dataRequest = detailsStore.getAll();
 
-        addRequest.onsuccess = () => {};
+        dataRequest.onsuccess = (e) => {
+          const dbRequest = e.target as IDBRequest;
+          const result: Array<object> = dbRequest.result;
+
+          if (result.length === 0) {
+            const userContentDetails: UserContentDetails = {
+              hasUsedOnce: false,
+              last_used: "",
+              username: "",
+              currentProject: "",
+              updateRequired: false,
+            };
+            const addRequest = detailsStore.add(userContentDetails);
+
+            addRequest.onsuccess = () => {};
+          }
+        };
       };
       // IMPLEMENT: Some fatal error occurred when opening db
-      dbRequest.onerror = (ev) => {
+      dbRequest.onerror = () => {
         /**
          * Handle error gracefully -- inform user that some issue occured
          */
@@ -136,7 +143,13 @@ class IndexedDBOperations {
           break;
         case "delete":
           {
-            const validDataTypes = ["schema", "project", "capture", "schemaEntry"];
+            const validDataTypes = [
+              "schema",
+              "project",
+              "capture",
+              "schemaEntry",
+              "captureRow",
+            ];
             if (!validDataTypes.includes(type)) {
               reject(
                 IndexedDBOperations._DBOperationResultFactory(
@@ -147,6 +160,7 @@ class IndexedDBOperations {
                 )
               );
             }
+
 
             IndexedDBOperations._delete(type, data)
               .then((dbResult) => {
@@ -978,7 +992,7 @@ class IndexedDBOperations {
   }
 
   private static _delete(
-    dataType: "schema" | "project" | "capture" | "schemaEntry",
+    dataType: "schema" | "project" | "capture" | "schemaEntry" | "captureRow",
     data:
       | SchemaId
       | ProjectId
@@ -988,6 +1002,11 @@ class IndexedDBOperations {
         }
       | {
           schema_id: SchemaId;
+          id: string;
+        }
+        | {
+          project_id: ProjectId;
+          capture_id: string
           id: string;
         }
   ): Promise<DBOperationResult> {
@@ -1148,6 +1167,117 @@ class IndexedDBOperations {
             };
           }
           break;
+        case "captureRow":
+          {
+            const captureDetails = data as {
+              project_id: ProjectId;
+              capture_id: string;
+              id: string;
+            };
+            const tx = IndexedDBOperations._db?.transaction(
+              ["projects"],
+              "readwrite"
+            );
+
+            // Get project
+            const projectStore = tx?.objectStore("projects");
+            if (!projectStore) {
+              reject(
+                IndexedDBOperations._DBOperationResultFactory(
+                  false,
+                  "delete",
+                  "captureRow",
+                  "Get operation on projects store failed"
+                )
+              );
+              tx?.abort();
+              return;
+            }
+
+            const projectRequest = projectStore.get(captureDetails.project_id);
+
+            if (!projectRequest) {
+              reject(
+                IndexedDBOperations._DBOperationResultFactory(
+                  false,
+                  "delete",
+                  "captureRow",
+                  "Get operation on projects store failed"
+                )
+              );
+              tx?.abort();
+              return;
+            }
+
+            projectRequest.onsuccess = (ev) => {
+              // Remove capture from project
+              const details = ev.target as IDBRequest;
+              const project: ProjectGroup = details.result;
+
+
+              // Delete capture
+              if (!Object.keys(project.captures).includes(captureDetails.capture_id)) {
+                reject(
+                  IndexedDBOperations._DBOperationResultFactory(
+                    false,
+                    "delete",
+                    "captureRow",
+                    "Capture id does not exist"
+                  )
+                );
+                tx?.abort();
+                return;
+              }
+
+              delete project.captures[captureDetails.capture_id]["capture_body"][captureDetails.id];
+
+              // Put object back in store
+              const putRequest = projectStore.put(project);
+
+              putRequest.onerror = (ev) => {
+                const details = ev.target as IDBRequest;
+                reject(
+                  IndexedDBOperations._DBOperationResultFactory(
+                    false,
+                    "delete",
+                    "captureRow",
+                    details.error
+                  )
+                );
+                tx?.abort();
+                return;
+              };
+
+              putRequest.onsuccess = (ev) => {
+                resolve(
+                  IndexedDBOperations._DBOperationResultFactory(
+                    true,
+                    "delete",
+                    "captureRow",
+                    null
+                  )
+                );
+                tx?.commit();
+                return;
+              };
+            };
+
+            projectRequest.onerror = (ev) => {
+              const details = ev.target as IDBRequest;
+              reject(
+                IndexedDBOperations._DBOperationResultFactory(
+                  false,
+                  "delete",
+                  "captureRow",
+                  details.error
+                )
+              );
+              tx?.abort();
+              return;
+            };
+          }
+          break;
+
         case "schema":
           {
             const schemaID = data as SchemaId;
@@ -1206,7 +1336,6 @@ class IndexedDBOperations {
               "readwrite"
             );
 
-            console.log(schemaEntryDetails)
             // Get schema store
             const schemaStore = tx?.objectStore("schemas");
             if (!schemaStore) {

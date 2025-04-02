@@ -4,7 +4,14 @@
 import { PopupTemplate } from "../components/popup_template";
 import { AppButtonTemplate } from "../../../shared/src/components/buttons/appButton";
 import { AppTableTemplate } from "../components/table/appTable";
-import { useState, useCallback, useRef, useMemo, useContext } from "react";
+import {
+  useState,
+  useCallback,
+  useRef,
+  useMemo,
+  useContext,
+  useEffect,
+} from "react";
 import * as styles from "./captureView.module.css";
 import {
   EditButton,
@@ -16,19 +23,45 @@ import {
 } from "../../../shared/src/utils/helpers";
 import ToastContext from "../context/Toast";
 import { AppDropdown } from "../../../shared/src/components/dropdownSelector/AppDropdown";
-import { useNavigate } from "react-router";
+import { useNavigate, useParams } from "react-router";
+import useContent from "../../../shared/src/hooks/useContent";
 
 export const CaptureView = () => {
-  /*IMPLEMENT: Get project details */
+  /*Get capture id passed via url */
+  const params = useParams();
+  const userContentEvent = useContent();
+
+  // Set local version of capture details
+  const [captureDetails, setCaptureDetails] = useState({});
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    userContentEvent
+      ?.emit("search", {
+        type: "capture",
+        term: params.captureId,
+      })
+      .then((results: Array<Capture>) => {
+        if (results.length === 1) {
+          setCaptureDetails(results[0]);
+        }
+      })
+      .catch((e) => {
+        console.log(e);
+      });
+  }, [isLoaded]);
   return (
     <>
       <PopupTemplate
         contentComponent={
-          <ContentComponent projectDetails={{}} captureId={""} />
+          <ContentComponent
+            captureDetails={captureDetails}
+            setCaptureDetails={setCaptureDetails}
+            setIsLoaded={setIsLoaded}
+            isLoaded={isLoaded}
+          />
         }
-        secondaryActions={
-          <SecondaryActions projectDetails={{}} captureId={""} />
-        }
+        secondaryActions={<SecondaryActions captureDetails={captureDetails} />}
         primaryAction={<PrimaryAction />}
         backButtonEnabled={true}
       />
@@ -36,7 +69,7 @@ export const CaptureView = () => {
   );
 };
 
-const ContentComponent = ({ projectDetails, captureId }) => {
+const ContentComponent = ({ captureDetails, setCaptureDetails, setIsLoaded, isLoaded}) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const handleFocus = useCallback(() => {
     if (inputRef.current) {
@@ -44,34 +77,33 @@ const ContentComponent = ({ projectDetails, captureId }) => {
       inputRef.current.focus();
     }
   }, []);
-  const handleBlur = useCallback(() => {
-    if (inputRef.current) {
-      inputRef.current.readOnly = true;
-    }
-  }, []);
 
-  // Input value
-  const [currentName, setCurrentName] = useState(
-    projectDetails.captures[captureId].name
-  );
-  const handleChangeText = useCallback((e) => {
-    setCurrentName(e.value);
-  }, []);
+
+  const handleChangeText = (e) => {
+    setCaptureDetails((prev: Capture) => {
+      return {
+        ...prev,
+        name: e.target.value,
+      };
+    });
+  }
 
   /**
    * Convert capture details to form usable by table template, i.e. table data type
    */
 
-  const captureDetails: Capture = useMemo(() => {
-    return projectDetails.captures[captureId];
-  }, [projectDetails, captureId]);
 
-  const captureDetailsTable = useMemo(() => {
+  const captureRows: TableData | null = useMemo(() => {
+
+    if (!captureDetails.id) return null;
+
     return tableDataConverter(
       "capture",
-      Object.values(projectDetails.captures[captureId].capture_body)
+      Object.values(captureDetails.capture_body)
     );
-  }, [projectDetails, captureId]);
+  
+
+  }, [captureDetails, isLoaded]);
 
   return (
     <>
@@ -82,16 +114,16 @@ const ContentComponent = ({ projectDetails, captureId }) => {
             <input
               ref={inputRef}
               type="text"
-              value={currentName}
+              value={captureDetails.name}
               className={styles.input_field}
-              readOnly
-              onBlur={handleBlur}
               onChange={handleChangeText}
             />
           </h3>
           <EditButton
             height={20}
             width={20}
+            strokeColor="black"
+            pathFill="none"
             onClick={handleFocus}
             title="Edit Name"
           />
@@ -106,12 +138,18 @@ const ContentComponent = ({ projectDetails, captureId }) => {
       </div>
       <div className={styles.table_container}>
         <AppTableTemplate
-          tableData={captureDetailsTable}
+          tableData={captureRows}
+          resetTableData={setIsLoaded}
           options={{
+            enableSet: false,
             enableDelete: true,
             enableEdit: false,
             enableInLineEdit: true,
-            dataType: "other",
+            dataType: "captureRow",
+            ownerId: {
+              capture_id: captureDetails.id,
+              project_id: captureDetails.project_id,
+            }
           }}
         />
       </div>
@@ -119,8 +157,10 @@ const ContentComponent = ({ projectDetails, captureId }) => {
   );
 };
 
-const SecondaryActions = ({ projectDetails, captureId }) => {
+const SecondaryActions = ({ captureDetails }) => {
   const [toastState, setToastState] = useContext(ToastContext);
+  const userContentEvents = useContent();
+  const navigate = useNavigate();
   /**
    * Delete Capture toast trigger handler
    */
@@ -140,19 +180,40 @@ const SecondaryActions = ({ projectDetails, captureId }) => {
           No{" "}
         </AppButtonTemplate>,
         <AppButtonTemplate
-          onClick={() => {
-            /* IMPLEMENT: trigger delete */
-            setToastState({
-              open: false,
+        onClick={() => {
+          userContentEvents
+            ?.emit("update", {
+              method: "update",
+              type: "capture",
+              data: captureDetails,
+            })
+            .then((be: BackendResponse) => {
+              if (be.data.success) {
+                setToastState({
+                  open: true,
+                  timer: 1000,
+                  text: <p>Updated capture successfully</p>,
+                });
+              } else {
+                throw be;
+              }
+            })
+            .catch((e) => {
+              console.log(e)
+              setToastState({
+                open: true,
+                timer: 1000,
+                text: <p>Error: failed to update capture details</p>,
+              });
             });
-          }}
+        }}
         >
           {" "}
           Yes{" "}
         </AppButtonTemplate>,
       ],
     });
-  }, [setToastState]);
+  }, [captureDetails]);
 
   /**
    * Export Capture toast trigger handler
@@ -162,8 +223,8 @@ const SecondaryActions = ({ projectDetails, captureId }) => {
       open: true,
       text: (
         <p>
-          Are you sure you want to delete
-          {projectDetails.captures[captureId].name}?
+          Are you sure you want to capture
+          {captureDetails.name}?
         </p>
       ), // Usually name of entry
       buttons: [
@@ -178,19 +239,44 @@ const SecondaryActions = ({ projectDetails, captureId }) => {
           No{" "}
         </AppButtonTemplate>,
         <AppButtonTemplate
-          onClick={() => {
-            /* IMPLEMENT: trigger delete */
-            setToastState({
-              open: false,
+        onClick={() => {
+          console.log(captureDetails)
+          userContentEvents
+            ?.emit("delete", {
+              method: "delete",
+              type: "capture",
+              data:{
+                id: captureDetails.id,
+                project_id: captureDetails.project_id
+              },
+            })
+            .then((be: BackendResponse) => {
+              if (be.data.success) {
+                setToastState({
+                  open: true,
+                  timer: 1000,
+                  text: <p>Deleted capture successfully</p>,
+                });
+              } else {
+                throw be;
+              }
+              navigate(-1);
+            })
+            .catch((e) => {
+              setToastState({
+                open: true,
+                timer: 1000,
+                text: <p>Error: failed to delete capture.</p>,
+              });
             });
-          }}
+        }}
         >
           {" "}
           Yes{" "}
         </AppButtonTemplate>,
       ],
     });
-  }, [setToastState]);
+  }, [captureDetails]);
 
   /**
    * Save Capture toast trigger handler
@@ -200,7 +286,7 @@ const SecondaryActions = ({ projectDetails, captureId }) => {
       open: true,
       text: (
         <p>
-          How do you want to export {projectDetails.captures[captureId].name}?
+          How do you want to export {captureDetails.name}?
         </p>
       ),
       buttons: [
@@ -214,12 +300,14 @@ const SecondaryActions = ({ projectDetails, captureId }) => {
           Back
         </AppButtonTemplate>,
         <AppDropdown
-          options={["json", "excel"]}
-          data={projectDetails.captures[captureId]}
+          options={["json"]}
+          data={captureDetails}
+          set="json"
+          exportButton={true}
         />,
       ],
     });
-  }, [toastState]);
+  }, [captureDetails]);
   return (
     <div className={styles.button_container}>
       <AppButtonTemplate

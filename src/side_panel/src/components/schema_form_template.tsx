@@ -1,9 +1,7 @@
-import { useCallback, useContext } from "react";
-import { useModel } from "../hooks/useModel";
+import { useContext } from "react";
 import * as styles from "./schema_form_template.module.css";
 
 import ToastContext from "../context/Toast";
-import ExtensionContext from "../context/ExtensionObjects";
 import { AppButtonTemplate } from "../../../shared/src/components/buttons/appButton";
 
 import { CreateSchemaHeader } from "./schema_components/header/CreateSchema";
@@ -13,6 +11,7 @@ import { EditSchemaHeader } from "./schema_components/header/EditSchema";
 import { SchemaTable } from "./schema_components/table/SchemaTable";
 import { CaptureTable } from "./schema_components/table/CaptureTable";
 import { messageFactory } from "../../../shared/src/utils/helpers";
+import ModelReducerContext from "../context/ModelReducerContext";
 /**
  * Captures, edit, and schema creator views are forms the user can interact with
  * , in that they can be edited, deleted etc. A buffered version of the schema or
@@ -24,30 +23,18 @@ import { messageFactory } from "../../../shared/src/utils/helpers";
  */
 
 export const SchemaFormTemplate: React.FC<SchemaFormTemplateProps> = ({
-  modelType,
   operation,
-  model,
-}) => {
+}) => { 
+  
   /**
-   * Chrome tab data and communication port to send messages with content script.
+   * Model reducer context
    */
-  const [tab, port] = useContext(ExtensionContext);
-
-  /**
-   * Maintain local copy of schema or capture before updating the user content model
-   * via service worker.
-   */
-  const [formModel, modelReducerObject, focusedCell] = useModel(
-    modelType,
-    tab?.url ?? "",
-    model
-  );
-
+  const [formModel, modelReducerObject, focusedCell] = useContext(ModelReducerContext)
   /**
    * Reset changes to existing schema or capture model
    */
   const handleReset = () => {
-    modelReducerObject.reset(model);
+    modelReducerObject.reset();
   };
 
   const [, setToastState] = useContext(ToastContext);
@@ -76,59 +63,56 @@ export const SchemaFormTemplate: React.FC<SchemaFormTemplateProps> = ({
             const newSchemaOp: CRUDDataOptions = {
               method: "",
               type: "",
-              data: {}
-            } 
+              data: {},
+            };
 
-            switch(operation){
+            switch (operation) {
               case "create_schema":
-                newSchemaOp.method = "create"
-                newSchemaOp.type = "schema"
-                newSchemaOp.data = formModel
-                break
+                newSchemaOp.method = "create";
+                newSchemaOp.type = "schema";
+                newSchemaOp.data = formModel;
+                break;
               case "edit_capture":
-                break
+                newSchemaOp.method = "create";
+                newSchemaOp.type = "capture";
+                newSchemaOp.data = formModel;
+                break;
               case "edit_schema":
-                newSchemaOp.method = "update"
-                newSchemaOp.type = "schema"
-                newSchemaOp.data = formModel
-                break
+                newSchemaOp.method = "update";
+                newSchemaOp.type = "schema";
+                newSchemaOp.data = formModel;
+                break;
               default:
                 setToastState({
                   open: true,
                   text: <p>Oops! Something went wrong</p>,
-                  timer: 1250
-                })
-                break
+                  timer: 1250,
+                });
+                break;
             }
-            const backendMessage = messageFactory("database", newSchemaOp)
-            chrome.runtime.sendMessage(backendMessage)
-            .then((be: BackendResponse)=>{
+            const backendMessage = messageFactory("database", newSchemaOp);
+            chrome.runtime
+              .sendMessage(backendMessage)
+              .then((be: BackendResponse) => {
+                if (be.data.success) {
+                  setToastState({
+                    open: true,
+                    text: <p>Changes saved successfully!</p>,
+                    timer: 1250,
+                  });
 
-              if(be.data.success){
+                  // Reset with changes to model
+                  modelReducerObject.reset(formModel);
+                }
+              })
+              .catch((be: BackendResponse) => {
                 setToastState({
                   open: true,
-                  text: <p>Changes saved successfully!</p>,
-                  timer: 1250
+                  text: <p>Oops! Changes not saved successfully</p>,
+                  timer: 1250,
                 });
-
-                modelReducerObject.reset(formModel)
-              }
-
-            })
-            .catch((be: BackendResponse)=>{
-              setToastState({
-                open: true,
-                text: <p>Oops! Changes not saved successfully</p>,
-                timer: 1250
-              });
-            })
-            
-
-
-            // Disconnect connection with content script
-            port?.disconnect()
+              })
           }}
-
         >
           Yes
         </AppButtonTemplate>,
@@ -142,24 +126,21 @@ export const SchemaFormTemplate: React.FC<SchemaFormTemplateProps> = ({
     case "create_schema":
       headerComponent = (
         <CreateSchemaHeader
-          formModel={formModel}
-          modelReducerObject={modelReducerObject}
+          
         ></CreateSchemaHeader>
       );
       break;
     case "edit_schema":
       headerComponent = (
         <EditSchemaHeader
-          formModel={formModel}
-          modelReducerObject={modelReducerObject}
+          
         ></EditSchemaHeader>
       );
       break;
     case "edit_capture":
       headerComponent = (
         <EditCaptureHeader
-          formModel={formModel}
-          modelReducerObject={modelReducerObject}
+         
         ></EditCaptureHeader>
       );
       break;
@@ -190,7 +171,6 @@ export const SchemaFormTemplate: React.FC<SchemaFormTemplateProps> = ({
               modelReducerObject={modelReducerObject}
               operation={operation}
               focusedCell={focusedCell}
-
             ></SchemaTable>
           )}
         </div>

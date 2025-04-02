@@ -3,13 +3,18 @@
  */
 import { PopupTemplate } from "../components/popup_template";
 import { ScrapeButton } from "../../../shared/src/assets/icons/appIcons";
-import { EditButton, AddButton } from "../../../shared/src/assets/icons/appIcons";
+import {
+  EditButton,
+  AddButton,
+} from "../../../shared/src/assets/icons/appIcons";
 import { ButtonSlider } from "../../../shared/src/components/slider/appSlider";
 import { AppTableTemplate } from "../components/table/appTable";
 
 import * as styles from "./homeView.module.css";
 import { useContext, useEffect, useMemo, useState } from "react";
-import { tableDataConverter } from "../../../shared/src/utils/helpers";
+import {
+  tableDataConverter,
+} from "../../../shared/src/utils/helpers";
 import { AppButtonTemplate } from "../../../shared/src/components/buttons/appButton";
 import { useNavigate } from "react-router";
 import ToastContext from "../context/Toast";
@@ -17,6 +22,7 @@ import UserContent from "../../../shared/src/state/state";
 import useContent from "../../../shared/src/hooks/useContent";
 import { openSidePanel } from "../utils/chromeMessaging";
 import TabContext from "../context/Tab";
+import PortContext from "../context/Port";
 
 export const HomeView = () => {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -30,6 +36,7 @@ export const HomeView = () => {
 
   const navigate = useNavigate();
 
+  // Set up userContentModel
   useEffect(() => {
     if (UserContent.hasLoaded) {
       // Fetch all user content
@@ -41,8 +48,13 @@ export const HomeView = () => {
             return;
           }
 
+          // Search tem
+          const searchTerm = !v.currentProject ? "NO_MATCH_DO_NOT_USE" : v.currentProject
+
+          
+
           return userContentEvents.emit("search", {
-            term: v.currentProject,
+            term: searchTerm,
             type: "project",
           });
         })
@@ -101,14 +113,24 @@ export const HomeView = () => {
             />
           }
           secondaryActions={<SecondaryActions />}
-          primaryAction={<PrimaryAction matchingSchemas={matchingSchemas} />}
+          primaryAction={
+            <PrimaryAction
+              matchingSchemas={matchingSchemas}
+              currentProject={currentProject}
+            />
+          }
           backButtonEnabled={false}
         />
       ) : (
         <PopupTemplate
           contentComponent={<></>}
           secondaryActions={<SecondaryActions />}
-          primaryAction={<PrimaryAction matchingSchemas={matchingSchemas} />}
+          primaryAction={
+            <PrimaryAction
+              matchingSchemas={matchingSchemas}
+              currentProject={currentProject}
+            />
+          }
           backButtonEnabled={false}
         />
       )}
@@ -239,7 +261,12 @@ const SecondaryActions = () => {
         </AppButtonTemplate>,
         <AppButtonTemplate
           onClick={() => {
-            openSidePanel(tab, "create_schema",  null);
+          openSidePanel(tab, "create_schema", {
+            name: "",
+            id: "",
+            url_match: tab?.url ?? "",
+            schema: {},
+          });
           }}
         >
           Create
@@ -254,8 +281,9 @@ const SecondaryActions = () => {
   );
 };
 
-const PrimaryAction = ({ matchingSchemas }) => {
+const PrimaryAction = ({ matchingSchemas, currentProject }) => {
   const [, setToastState] = useContext(ToastContext);
+  const tab = useContext(TabContext)
   return (
     <>
       <ScrapeButton
@@ -263,8 +291,19 @@ const PrimaryAction = ({ matchingSchemas }) => {
         width={30}
         title="Scrape"
         onClick={() => {
+
+          if(!currentProject.id){
+            setToastState({
+              open: true,
+              text: <p>Must set project before scraping page</p>,
+              timer: 1250
+            })
+            return
+          }
           if (matchingSchemas && matchingSchemas.length > 0) {
-            /* Execute scrape logic */
+
+            // Trigger scrape on side panel
+            openSidePanel(tab, "edit_capture", matchingSchemas)
           } else {
             setToastState({
               open: true,

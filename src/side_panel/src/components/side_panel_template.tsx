@@ -22,7 +22,7 @@ export const SidePanelTemplate: React.FC = ({ children }) => {
           <div className={styles.popup_header_container}>
             <div className={styles.popup_header_logo_container}>
               <img
-                src="src/assets/web-scraper-128.png"
+                src="../../assets/web-scraper-128.png"
                 alt="Scraper"
                 className={styles.scrape_plate_logo}
               />
@@ -39,6 +39,7 @@ export const SidePanelTemplate: React.FC = ({ children }) => {
                 strokeColor="black"
                 svgFill="#353535ff"
                 onClick={() => {
+                  console.log("Hello")
                   window.close();
                 }}
               />

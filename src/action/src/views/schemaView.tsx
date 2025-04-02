@@ -68,7 +68,12 @@ export const SchemaView = () => {
   );
 };
 
-const ContentComponent = ({ schemaDetails, setSchemaDetails, setIsLoaded, isLoaded }) => {
+const ContentComponent = ({
+  schemaDetails,
+  setSchemaDetails,
+  setIsLoaded,
+  isLoaded,
+}) => {
   /**
    * Schema name handlers
    */
@@ -167,59 +172,35 @@ const SecondaryActions = ({ schemaDetails }) => {
         </AppButtonTemplate>,
         <AppButtonTemplate
           onClick={() => {
-            setToastState((prevState) => ({
-              ...prevState,
-              open: true,
-              text: (
-                <p> Are you sure you want to delete {schemaDetails.name}?</p>
-              ), // Usually name of entry
-              buttons: [
-                <AppButtonTemplate
-                  onClick={() => {
-                    setToastState({
-                      open: false,
-                    });
-                  }}
-                >
-                  No
-                </AppButtonTemplate>,
-                <AppButtonTemplate
-                  onClick={() => {
-                    userContentEvents
-                      ?.emit("delete", {
-                        method: "delete",
-                        type: "schema",
-                        data: schemaDetails.id,
-                      })
-                      .then((be: BackendResponse) => {
-                        if (be.data.success) {
-                          setToastState({
-                            open: true,
-                            timer: 1000,
-                            text: <p>Deleted schema successfully</p>,
-                          });
-                        } else {
-                          throw be;
-                        }
-                        navigate(-1);
-                      })
-                      .catch((e) => {
-                        setToastState({
-                          open: true,
-                          timer: 1000,
-                          text: <p>Error: failed to delete schema.</p>,
-                        });
-                      });
-                  }}
-                >
-                  Yes
-                </AppButtonTemplate>,
-              ],
-            }));
+            userContentEvents
+              ?.emit("delete", {
+                method: "delete",
+                type: "schema",
+                data: schemaDetails.id,
+              })
+              .then((be: BackendResponse) => {
+                if (be.data.success) {
+                  setToastState({
+                    open: true,
+                    timer: 1000,
+                    text: <p>Deleted schema successfully</p>,
+                  });
+
+                } else {
+                  throw be;
+                }
+                navigate(-1);
+              })
+              .catch((e) => {
+                setToastState({
+                  open: true,
+                  timer: 1000,
+                  text: <p>Error: failed to delete schema.</p>,
+                });
+              });
           }}
         >
-          {" "}
-          Yes{" "}
+          Yes
         </AppButtonTemplate>,
       ],
     });

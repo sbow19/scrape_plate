@@ -1,8 +1,11 @@
 import { useContext, useMemo, useRef } from "react";
 import ToastContext from "../../../context/Toast";
-import * as styles from "./CaptureTable.module.css";
-import { DeleteButton, EditButton } from "../../../../../shared/src/assets/icons/appIcons";
+import {
+  DeleteButton,
+  EditButton,
+} from "../../../../../shared/src/assets/icons/appIcons";
 import { AppButtonTemplate } from "../../../../../shared/src/components/buttons/appButton";
+import ModelReducerContext from "../../../context/ModelReducerContext";
 
 /**
  * When keys are deleted, updated or added, call the modelREducerObject
@@ -11,16 +14,12 @@ import { AppButtonTemplate } from "../../../../../shared/src/components/buttons/
  * Each row contains state related to an individual item. oChanges to these items will
  * call an update for the global  modelReducerObject
  */
-export const CaptureTable: React.FC<SchemaFormTableProps> = ({
-  operation,
-  formModel,
-  modelReducerObject,
-}) => {
-  const objectType = useMemo(() => {
-    return formModel.capture_body ? "capture_body" : "schema";
-  }, []);
+export const CaptureTable: React.FC<SchemaFormTableProps> = ({ operation }) => {
+  const [formModel, modelReducerObject] = useContext(ModelReducerContext);
 
-  const [, setToastState] = useContext(ToastContext);
+  const objectType = useMemo(() => {
+    return operation === "edit_capture" ? "capture_body" : "schema";
+  }, [operation, formModel]);
 
   /**
    * When editing a capturen only the matched_value can be changed
@@ -34,36 +33,34 @@ export const CaptureTable: React.FC<SchemaFormTableProps> = ({
   };
 
   /**
-   * Delete row, schemEntry
+   * Delete row, schemaEntry
    */
-  const handleDelete = (key: string) => {
-    // Key is the entry, vaue edited is either schema key or schema  value, match property is instantiated values for each key
-    delete formModel[objectType][key];
-
+  const handleDelete = (entryId: string) => {
     // Update model reducer
-    modelReducerObject.update(objectType, formModel[objectType]);
+    modelReducerObject.deleteRow(entryId);
   };
 
   return (
     <>
-      {formModel[objectType] && (
+      {formModel && (
         <table>
           <thead>
             <td>Key</td>
             <td>Value</td>
           </thead>
           <tbody>
-            {Object.values(formModel[objectType]).map((entry) => {
-              return (
-                <TableRowTemplate
-                  entry={entry}
-                  index={entry.id}
-                  handleChange={handleChange}
-                  handleDelete={handleDelete}
-                  operation={operation}
-                />
-              );
-            })}
+            {formModel[objectType] &&
+              Object.values(formModel[objectType]).map((entry: SchemaEntry) => {
+                return (
+                  <TableRowTemplate
+                    entry={entry}
+                    index={entry.id}
+                    handleChange={handleChange}
+                    handleDelete={handleDelete}
+                    operation={operation}
+                  />
+                );
+              })}
           </tbody>
         </table>
       )}
@@ -71,7 +68,13 @@ export const CaptureTable: React.FC<SchemaFormTableProps> = ({
   );
 };
 
-const TableRowTemplate = ({ operation, handleChange, handleDelete, entry, index }) => {
+const TableRowTemplate = ({
+  operation,
+  handleChange,
+  handleDelete,
+  entry,
+  index,
+}) => {
   const [, setToastState] = useContext(ToastContext);
 
   const keyRef = useRef<HTMLInputElement>(null);
@@ -87,7 +90,7 @@ const TableRowTemplate = ({ operation, handleChange, handleDelete, entry, index 
           readOnly
         />
       </td>
-      <td >
+      <td>
         <input
           ref={valueRef}
           type="text"
@@ -114,7 +117,11 @@ const TableRowTemplate = ({ operation, handleChange, handleDelete, entry, index 
           onClick={() => {
             setToastState({
               open: true,
-              text: <p>Are you sure you want to delete {entry.key.matched_value}?</p>,
+              text: (
+                <p>
+                  Are you sure you want to delete {entry.key.matched_value}?
+                </p>
+              ),
               buttons: [
                 <AppButtonTemplate
                   onClick={() => {

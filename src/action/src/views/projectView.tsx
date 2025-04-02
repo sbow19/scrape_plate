@@ -9,7 +9,14 @@ import {
 import { AppButtonTemplate } from "../../../shared/src/components/buttons/appButton";
 import * as styles from "./projectView.module.css";
 import { AppTableTemplate } from "../components/table/appTable";
-import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   tableDataConverter,
   convertISOToDate,
@@ -21,33 +28,41 @@ import { AppDropdown } from "../../../shared/src/components/dropdownSelector/App
 import useContent from "../../../shared/src/hooks/useContent";
 
 export const ProjectView: React.FC = () => {
-
   // Project id passed via url param
   const params = useParams();
-  const userContentEvent = useContent()
-  
-  // Set local version of project details
-  const [projectDetails, setProjectDetails] = useState({})
+  const userContentEvent = useContent();
 
-  useEffect(()=>{
-    userContentEvent?.emit('search', {
-      type: 'project',
-      term: params.projectId
-    })
-    .then((results: Array<ProjectGroup>)=>{
-      if(results.length === 1){
-        setProjectDetails(results[0])
-      }
-    })
-    .catch((e)=>{
-      console.log(e)
-    })
-  }, [])
+  // Set local version of project details
+  const [projectDetails, setProjectDetails] = useState({});
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    userContentEvent
+      ?.emit("search", {
+        type: "project",
+        term: params.projectId,
+      })
+      .then((results: Array<ProjectGroup>) => {
+        if (results.length === 1) {
+          setProjectDetails(results[0]);
+        }
+      })
+      .catch((e) => {
+        console.log(e);
+      });
+  }, [isLoaded]);
 
   return (
     <>
       <PopupTemplate
-        contentComponent={<ContentComponent projectDetails={projectDetails} setProjectDetails={setProjectDetails}/>}
+        contentComponent={
+          <ContentComponent
+            projectDetails={projectDetails}
+            setProjectDetails={setProjectDetails}
+            setIsLoaded={setIsLoaded}
+            isLoaded={isLoaded}
+          />
+        }
         secondaryActions={<SecondaryActions projectDetails={projectDetails} />}
         primaryAction={<PrimaryAction />}
         backButtonEnabled={true}
@@ -56,8 +71,7 @@ export const ProjectView: React.FC = () => {
   );
 };
 
-const ContentComponent = ({ projectDetails, setProjectDetails }) => {
-
+const ContentComponent = ({ projectDetails, setProjectDetails, setIsLoaded, isLoaded }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const handleFocus = useCallback(() => {
     if (inputRef.current) {
@@ -67,13 +81,13 @@ const ContentComponent = ({ projectDetails, setProjectDetails }) => {
 
   // Input value
   const handleChangeText = (e) => {
-    setProjectDetails(prev=>{
+    setProjectDetails((prev: ProjectGroup) => {
       return {
-        ...projectDetails,
-        name: e.target.value
-      }
+        ...prev,
+        name: e.target.value,
+      };
     });
-  }
+  };
 
   /**
    * Convert capture details to form usable by table template, i.e. table data type
@@ -84,7 +98,7 @@ const ContentComponent = ({ projectDetails, setProjectDetails }) => {
       "captureList",
       Object.values(projectDetails.captures)
     );
-  }, [projectDetails]);
+  }, [projectDetails, isLoaded]);
 
   return (
     <>
@@ -122,13 +136,14 @@ const ContentComponent = ({ projectDetails, setProjectDetails }) => {
       <div className={styles.table_container}>
         <AppTableTemplate
           tableData={projectDetailsTable}
+          resetTableData={setIsLoaded}
           options={{
             enableEdit: true,
             enableDelete: true,
             enableSet: false,
             enableInLineEdit: false,
             dataType: "capture",
-            ownerId: projectDetails.id
+            ownerId: projectDetails.id,
           }}
         />
       </div>
@@ -138,8 +153,8 @@ const ContentComponent = ({ projectDetails, setProjectDetails }) => {
 
 const SecondaryActions = ({ projectDetails }) => {
   const [toastState, setToastState] = useContext(ToastContext);
-  const userContentEvents = useContent()
-  const navigate = useNavigate()
+  const userContentEvents = useContent();
+  const navigate = useNavigate();
   /**
    * Delete project toast trigger handler
    */
@@ -156,42 +171,37 @@ const SecondaryActions = ({ projectDetails }) => {
             });
           }}
         >
-          
           No
         </AppButtonTemplate>,
         <AppButtonTemplate
           onClick={() => {
-            userContentEvents?.emit('delete', {
-              method: 'delete',
-              type: 'project',
-              data: projectDetails.id
-            })
-            .then((be: BackendResponse)=>{
-              if(be.data.success){
-                setToastState(
-                  {
+            userContentEvents
+              ?.emit("delete", {
+                method: "delete",
+                type: "project",
+                data: projectDetails.id,
+              })
+              .then((be: BackendResponse) => {
+                if (be.data.success) {
+                  setToastState({
                     open: true,
                     timer: 1000,
-                    text: <p>Deleted project successfully</p>
-                  }
-                )
-              } else {
-                throw be
-              }
-              navigate(-1)
-            })
-            .catch((e)=>{
-              setToastState(
-                {
+                    text: <p>Deleted project successfully</p>,
+                  });
+                } else {
+                  throw be;
+                }
+                navigate(-1);
+              })
+              .catch((e) => {
+                setToastState({
                   open: true,
                   timer: 1000,
-                  text: <p>Error: failed to delete project.</p>
-                }
-              )
-            })
+                  text: <p>Error: failed to delete project.</p>,
+                });
+              });
           }}
         >
-          
           Yes
         </AppButtonTemplate>,
       ],
@@ -209,18 +219,18 @@ const SecondaryActions = ({ projectDetails }) => {
       buttons: [
         <AppButtonTemplate
           onClick={() => {
-            setToastState((prevState) => ({
+            setToastState(() => ({
               open: false,
             }));
           }}
         >
           Back
         </AppButtonTemplate>,
-        <AppDropdown 
-          options={["json"]} 
+        <AppDropdown
+          options={["json"]}
           data={projectDetails}
           exportButton={true}
-          set='json'
+          set="json"
         />,
       ],
     }));
@@ -241,41 +251,36 @@ const SecondaryActions = ({ projectDetails }) => {
             });
           }}
         >
-          
           No
         </AppButtonTemplate>,
         <AppButtonTemplate
           onClick={() => {
-            userContentEvents?.emit('update', {
-              method: 'update',
-              type: 'project',
-              data: projectDetails
-            })
-            .then((be: BackendResponse)=>{
-              if(be.data.success){
-                setToastState(
-                  {
+            userContentEvents
+              ?.emit("update", {
+                method: "update",
+                type: "project",
+                data: projectDetails,
+              })
+              .then((be: BackendResponse) => {
+                if (be.data.success) {
+                  setToastState({
                     open: true,
                     timer: 1000,
-                    text: <p>Updated project successfully</p>
-                  }
-                )
-              } else {
-                throw be
-              }
-            })
-            .catch((e)=>{
-              setToastState(
-                {
+                    text: <p>Updated project successfully</p>,
+                  });
+                } else {
+                  throw be;
+                }
+              })
+              .catch((e) => {
+                setToastState({
                   open: true,
                   timer: 1000,
-                  text: <p>Error: failed to update project details</p>
-                }
-              )
-            })
+                  text: <p>Error: failed to update project details</p>,
+                });
+              });
           }}
         >
-          
           Yes
         </AppButtonTemplate>,
       ],
@@ -326,7 +331,7 @@ const PrimaryAction = () => {
         onClick={() => {
           navigate("/action/index.html");
         }}
-        title='Home'
+        title="Home"
       />
     </>
   );

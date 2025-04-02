@@ -2,8 +2,8 @@
     /*STYLE*/
     height: 550px;
     width: 375px;
-    border-radius: 20px;
     box-shadow: 1px 2px 3px 1px var(--secondary);
+
 
 
     /*LAYOUT*/
@@ -98,6 +98,11 @@
     display: flex;
     align-items: center;
     justify-content: space-around;
+
+}
+
+.popup_header_logo_container > h1 {
+    color: var(--white);
 
 }
 

@@ -1,11 +1,4 @@
-import {
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useContext, useEffect, useMemo, useRef } from "react";
 import ToastContext from "../../../context/Toast";
 import {
   AddButton,
@@ -15,22 +8,8 @@ import * as styles from "./SchemaTable.module.css";
 import { AppDropdown } from "../../../../../shared/src/components/dropdownSelector/AppDropdown";
 import { AppButtonTemplate } from "../../../../../shared/src/components/buttons/appButton";
 import ExtensionContext from "../../../context/ExtensionObjects";
-
-/**
- * Generic helper function to fetch matching elements from the DOM
- * @param value
- * @param matchType
- * @returns
- */
-const fetchValue = (
-  matchExpression: string,
-  matchType: "id" | "css selector" | "regex"
-): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    // Must message service worker to trigger a content script to obtain the request value
-    resolve("No Match");
-  });
-};
+import { fetchValue } from "../../../utils/fetchValue";
+import ModelReducerContext from "../../../context/ModelReducerContext";
 
 /**
  * When keys are deleted, updated or added, call the modelREducerObject
@@ -42,15 +21,13 @@ const fetchValue = (
  * When the user saves changes, the current schema object in the Table will  be taken
  * and used to update the User Content Model as a batch.
  */
-export const SchemaTable: React.FC<SchemaFormTableProps> = ({
-  operation,
-  formModel,
-  modelReducerObject,
-  focusedCell,
-}) => {
+export const SchemaTable: React.FC<SchemaFormTableProps> = ({ operation }) => {
+  const [formModel, modelReducerObject, focusedCell] =
+    useContext(ModelReducerContext);
+
   const objectType = useMemo(() => {
-    return formModel.capture_body ? "capture_body" : "schema";
-  }, []);
+    return operation === "edit_capture" ? "capture_body" : "schema";
+  }, [operation, formModel]);
 
   /**
    * Changing content of the schema model in the component will cause continous
@@ -81,6 +58,36 @@ export const SchemaTable: React.FC<SchemaFormTableProps> = ({
       }
       clearTimeout(fetchTimerRef?.current ?? undefined);
 
+      // If match expression is edited, then use that, else use expression in form model
+      const matchExpression =
+        matchProperty === "match_expression"
+          ? value
+          : formModel[objectType][key][valueEdited]["match_expression"];
+
+      // And vice-versa
+      const matchType =
+        matchProperty === "match_type"
+          ? value
+          : formModel[objectType][key][valueEdited]["match_type"];
+      // Check manual key/matched value generation
+      if (matchType === "manual") {
+        formModel[objectType][key][valueEdited]["match_expression"] =
+          matchExpression;
+        formModel[objectType][key][valueEdited]["match_type"] = matchType;
+        formModel[objectType][key][valueEdited]["matched_value"] = value;
+
+        modelReducerObject.update(objectType, formModel[objectType]);
+        fetchInProgressRef.current = false;
+        resolve();
+        return;
+      } else {
+        // Update typing immediately
+        formModel[objectType][key][valueEdited]["match_expression"] =
+          matchExpression;
+        formModel[objectType][key][valueEdited]["match_type"] = matchType;
+        modelReducerObject.update(objectType, formModel[objectType]);
+      }
+
       // RESET INPUT RE STYLE
       inputRef.current.style.border = "";
       inputRef.current.style.color = "white";
@@ -91,42 +98,14 @@ export const SchemaTable: React.FC<SchemaFormTableProps> = ({
         // Stop further requests while fetching data
         fetchInProgressRef.current = true;
 
-        // If match expression is edited, then use that, else use expression in form model
-        const matchExpression =
-          matchProperty === "match_expression"
-            ? value
-            : formModel[objectType][key][valueEdited]["match_expression"];
-
-        // And vice-versa
-        const matchType =
-          matchProperty === "match_type"
-            ? value
-            : formModel[objectType][key][valueEdited]["match_type"];
-
         // STEP 3: Validate the matched value for key and values
         if (valueEdited == "key") {
-          // Check manual key/matched value generation
-          if (matchType === "manual") {
-            formModel[objectType][key][valueEdited]["match_expression"] =
-              matchExpression;
-            formModel[objectType][key][valueEdited]["match_type"] = matchType;
-            formModel[objectType][key][valueEdited]["matched_value"] = value;
-
-            modelReducerObject.update(objectType, formModel[objectType]);
-            fetchInProgressRef.current = false;
-            resolve();
-            return;
-          }
-
           // Fetch DOM content with Promise
-          fetchValue(matchExpression, matchType)
-            .then((newValue) => {
+          fetchValue(matchExpression, matchType, port)
+            .then((domDataPoint) => {
               // Update model
-              formModel[objectType][key][valueEdited]["match_expression"] =
-                matchExpression;
-              formModel[objectType][key][valueEdited]["match_type"] = matchType;
               formModel[objectType][key][valueEdited]["matched_value"] =
-                newValue;
+                domDataPoint.matchValue;
               modelReducerObject.update(objectType, formModel[objectType]);
 
               resolve();
@@ -143,15 +122,12 @@ export const SchemaTable: React.FC<SchemaFormTableProps> = ({
               fetchInProgressRef.current = false;
             });
         } else if (valueEdited === "value") {
-          fetchValue(matchExpression, matchType)
-            .then((newValue) => {
+          fetchValue(matchExpression, matchType, port)
+            .then((domDataPoint) => {
               // Validation
 
-              formModel[objectType][key][valueEdited]["match_expression"] =
-                matchExpression;
-              formModel[objectType][key][valueEdited]["match_type"] = matchType;
               formModel[objectType][key][valueEdited]["matched_value"] =
-                newValue;
+                domDataPoint.matchValue;
               modelReducerObject.update(objectType, formModel[objectType]);
 
               resolve();
@@ -168,7 +144,7 @@ export const SchemaTable: React.FC<SchemaFormTableProps> = ({
               fetchInProgressRef.current = false;
             });
         }
-      }, 50);
+      }, 1000);
     });
   };
 
@@ -249,20 +225,21 @@ export const SchemaTable: React.FC<SchemaFormTableProps> = ({
             <td>Value</td>
           </thead>
           <tbody className={styles.table_body}>
-            {Object.values(formModel[objectType]).map((entry: SchemaEntry) => {
-              return (
-                <TableRowTemplate
-                  entryId={entry.id}
-                  entry={entry}
-                  handleChange={handleChange}
-                  handleDelete={handleDelete}
-                  handleFocus={handleFocus}
-                  handleMove={handleMove}
-                  focusedCell={focusedCell}
-                  operation={operation}
-                />
-              );
-            })}
+            {formModel[objectType] &&
+              Object.values(formModel[objectType]).map((entry: SchemaEntry) => {
+                return (
+                  <TableRowTemplate
+                    entryId={entry.id}
+                    entry={entry}
+                    handleChange={handleChange}
+                    handleDelete={handleDelete}
+                    handleFocus={handleFocus}
+                    handleMove={handleMove}
+                    focusedCell={focusedCell}
+                    operation={operation}
+                  />
+                );
+              })}
           </tbody>
           {operation !== "edit_capture" && (
             <tfoot className={styles.add_row_button}>

@@ -84,7 +84,12 @@ const SecondaryActions = () => {
           color: "black",
         }}
         onClick={()=>{
-          openSidePanel(tab, "create_schema",  null);
+          openSidePanel(tab, "create_schema",   {
+            name: "",
+            id: "",
+            url_match: tab?.url ?? "",
+            schema: {},
+          });
         }}
       >
         Create Schema

@@ -108,6 +108,15 @@ declare global {
           id: string;
         };
       }
+     | {
+        method: "delete";
+        type: "captureRow";
+        data: {
+          project_id: ProjectId;
+          capture_id: string;
+          id: string // Entry Id
+        };
+      }
     | { method: "update"; type: "details"; data: UserContentDetails };
 
   // Define conditional data structures for different operations
@@ -130,6 +139,7 @@ declare global {
     openSidePanel: {
       method: "edit_schema" | "create_schema" | "edit_capture";
       schema: Schema | Array<Schema>; // Matching schema or schemas
+      tab: chrome.tabs.Tab
     };
 
     getCurrentTab: chrome.tabs.Tab;
@@ -236,7 +246,8 @@ declare global {
     | "capture"
     | "all"
     | "other"
-    | "schemaMatches";
+    | "schemaMatches"
+    | "captureRow"
 
   type DBErrorMessage =
     | "Invalid data type"
@@ -339,14 +350,10 @@ declare global {
   };
 
   type SchemaFormTemplateProps = {
-    modelType: ModelTypes;
     operation: "create_schema" | "edit_schema" | "edit_capture";
-    model: Schema | Schema[] | Capture | null;
   };
 
   type SchemaFormProps = {
-    formModel: Capture | Schema;
-    modelReducerObject: ReducerObject;
   };
 
   type SchemaFormTableProps = {
@@ -370,7 +377,10 @@ declare global {
     enableSet: boolean; // Set whether project is current project
     enableInLineEdit: boolean;
     dataType: DBOperationDataType;
-    ownerId: string // If project or schema, they own captures and schemaEntries
+    ownerId: string | {
+      project_id: ProjectId,
+      capture_id: string
+    }// If project or schema, they own captures and schemaEntries
   };
 
   type TableDataTypeOptions =

@@ -95,8 +95,8 @@ import { messageFactory } from "../../shared/src/utils/helpers";
   /**
    * Starting at parent of the span node, crawl through five teps of parent
    * elements to build specific css selector. Up to 5 layers of parent nodes
-   * above the span element. 
-   * @param {HTMLSpanElement} spanNode Span Element containing selected text node 
+   * above the span element.
+   * @param {HTMLSpanElement} spanNode Span Element containing selected text node
    * @returns {DOMDataPoint} css selector or id and the value of such
    */
   function buildCSSSelector(spanNode: HTMLSpanElement) {
@@ -115,13 +115,12 @@ import { messageFactory } from "../../shared/src/utils/helpers";
 
       selectorString += parent.tagName.toLowerCase();
       if (parent.id && i === 0) {
-
-        const element = document.getElementById(parent.id)
+        const element = document.getElementById(parent.id);
         const dataPoint: DOMDataPoint = {
           matchType: "id",
           matchExpression: parent.id,
-          matchValue: element?.textContent ?? ''
-        } 
+          matchValue: element?.textContent ?? "",
+        };
         return dataPoint;
       }
 
@@ -141,12 +140,12 @@ import { messageFactory } from "../../shared/src/utils/helpers";
     }
 
     // Fetch text again
-    const element = document.querySelector(cssSelector)
+    const element = document.querySelector(cssSelector);
     const dataPoint: DOMDataPoint = {
       matchType: "css selector",
       matchExpression: cssSelector,
-      matchValue: element?.textContent ?? ''
-    }
+      matchValue: element?.textContent ?? "",
+    };
     return dataPoint;
   }
 
@@ -164,9 +163,9 @@ import { messageFactory } from "../../shared/src/utils/helpers";
           const dataPoint = buildCSSSelector(spanContainer);
           const backendMessage = messageFactory("sendDOMData", {
             type: "fetchOne",
-            data: dataPoint
-          })
-          extensionPort.postMessage(backendMessage)
+            data: dataPoint,
+          });
+          extensionPort.postMessage(backendMessage);
           return;
         }
       } else if (node.nodeType === Node.TEXT_NODE) {
@@ -174,14 +173,13 @@ import { messageFactory } from "../../shared/src/utils/helpers";
 
         if (parent?.nodeType === Node.ELEMENT_NODE) {
           if (parent.classList.contains("scrape_plate_hover")) {
-
             const spanContainer = parent.parentNode;
             const dataPoint = buildCSSSelector(spanContainer);
             const backendMessage = messageFactory("sendDOMData", {
               type: "fetchOne",
-              data: dataPoint
-            })
-            extensionPort.postMessage(backendMessage)
+              data: dataPoint,
+            });
+            extensionPort.postMessage(backendMessage);
             return;
           }
         }
@@ -204,6 +202,69 @@ import { messageFactory } from "../../shared/src/utils/helpers";
       overlay.style.backgroundColor = "rgba(0,0,0,0)";
       document.removeEventListener("mousemove", highlightText);
       document.removeEventListener("mousemove", parseClick);
+    });
+
+    extensionPort.onMessage.addListener((message: BackendMessage) => {
+      if (message.operation === "sendDOMData") {
+        if (message.data.type === "fetchMany") {
+          // Extract schemaModel from message
+          const schema: SchemaModel = message.data.data.schema;
+
+          // Loop through values and fetch
+          Object.values(schema).forEach((entry: SchemaEntry) => {
+            const valueEntry = schema[entry.id].value;
+
+            if (!valueEntry.match_expression) return;
+
+            if (valueEntry.match_type === "id") {
+              const element = document.getElementById(
+                valueEntry.match_expression
+              );
+              schema[entry.id].value.matched_value =
+                element?.textContent?.trim() ?? "";
+            } else if (valueEntry.match_type === "css selector") {
+              const elements = document.querySelectorAll(
+                valueEntry.match_expression
+              );
+              schema[entry.id].value.matched_value = "";
+
+              elements.forEach((element) => {
+                schema[entry.id].value.matched_value +=
+                  element?.textContent?.trim() ?? "";
+              });
+            }
+          });
+
+          const backendMessage: BackendMessage = messageFactory("sendDOMData", {
+            data: schema,
+            type: "fetchMany",
+          });
+          extensionPort.postMessage(backendMessage);
+        } else if (message.data.type === "fetchOne") {
+          // Extract domdaatapoint from message
+          const domDataPoint: DOMDataPoint = message.data.data;
+          if (domDataPoint.matchType === "id") {
+            const element = document.getElementById(
+              domDataPoint.matchExpression
+            );
+            domDataPoint.matchValue = element?.textContent?.trim() ?? "";
+          } else if (domDataPoint.matchType === "css selector") {
+            const elements = document.querySelectorAll(
+              domDataPoint.matchExpression
+            );
+            domDataPoint.matchValue = "";
+
+            elements.forEach((element) => {
+              domDataPoint.matchValue += element?.textContent?.trim() ?? "";
+            });
+          }
+          const backendMessage: BackendMessage = messageFactory("sendDOMData", {
+            data: domDataPoint,
+            type: "fetchOne",
+          });
+          extensionPort.postMessage(backendMessage);
+        }
+      }
     });
   });
 

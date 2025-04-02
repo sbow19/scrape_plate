@@ -1,9 +1,13 @@
+import { useContext } from 'react';
 import * as styles from './header.module.css'
+import ModelReducerContext from '../../../context/ModelReducerContext';
 
 export const CreateSchemaHeader: React.FC<SchemaFormProps> = ({
-  formModel,
-  modelReducerObject,
 }) => {
+  /**
+   * Model reducer context
+   */
+  const [formModel, modelReducerObject,] = useContext(ModelReducerContext)
   return (
     <>
       <h3>Create Schema</h3>

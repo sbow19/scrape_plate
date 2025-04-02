@@ -8,6 +8,10 @@
   --orange: #f39237ff;
 }
 
+#root, body {
+  background-color: transparent;
+}
+
 @font-face {
   font-family: "OpenSans";
   src: url("../assets/Open_Sans/OpenSans-VariableFont_wdth,wght.ttf")
@@ -34,7 +38,7 @@
   font-family: "OpenSans", Roboto, "Gill Sans", "Gill Sans MT", Calibri,
     "Trebuchet MS", sans-serif;
 
-  color: var(--white);
+  color: var(--secondary);
 }
 
 ::-webkit-scrollbar {

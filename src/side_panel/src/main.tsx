@@ -6,7 +6,9 @@ import { createRoot } from "react-dom/client";
 import "../../global_styles/global_styles.css";
 
 import { App } from "./App";
+import UserContent from "../../shared/src/state/state";
 
+UserContent.init();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

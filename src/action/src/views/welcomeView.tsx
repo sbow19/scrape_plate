@@ -7,6 +7,9 @@ import { AppButtonTemplate } from "../../../shared/src/components/buttons/appBut
 import * as styles from "./welcomeVIew.module.css";
 import useContent from "../../../shared/src/hooks/useContent";
 import { convertISOToDate } from "../../../shared/src/utils/helpers";
+import { openSidePanel } from "../utils/chromeMessaging";
+import { useContext } from "react";
+import TabContext from "../context/Tab";
 
 export const WelcomeView = () => {
   return (
@@ -43,6 +46,7 @@ const ContentComponent = () => {
 
 const SecondaryActions = () => {
   const userEventModel = useContent();
+  const tab = useContext(TabContext)
 
   const handleOnNewSchema = () => {
 
@@ -52,7 +56,7 @@ const SecondaryActions = () => {
       type: "details",
       data: {
         hasUsedOnce: true,
-        username: "sbow19",
+        username: "",
         last_used: convertISOToDate(newDate) ?? '',
         currentProject: '',
         updateRequired: false
@@ -61,21 +65,20 @@ const SecondaryActions = () => {
     userEventModel
       ?.emit("update", updateDetails)
       .then((dbResponse: BackendResponse) => {
-        const sidePanelRequest: BackendMessage = {
-          operation: "openSidePanel",
-          data: {
-            method: "create_schema",
-            schema: "",
-          },
-        };
 
-        setTimeout(()=>{
-
-          chrome.runtime.sendMessage(sidePanelRequest).catch((error) => {});
-          window.close()
-        }, 100)
+        if(dbResponse.data.success){
+          openSidePanel(tab, "create_schema", {
+            name: "",
+            id: "",
+            url_match: tab?.url ?? "",
+            schema: {},
+          })
+        } else {
+          throw dbResponse
+        }
       })
       .catch((dbResponse: BackendResponse) => {
+        // IMPLEMENT: handle fail to set user details
       });
   };
 
