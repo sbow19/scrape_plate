@@ -174,7 +174,7 @@ export const AppTableTemplate: React.FC<AppTableProps> = ({
                           options?.enableInLineEdit ?? null ? "inline" : ""
                         }
                       >
-                        {dataPoint}
+                        <span>{dataPoint}</span>
                       </td>
                     );
                   })}

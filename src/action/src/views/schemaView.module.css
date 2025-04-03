@@ -1,61 +1,75 @@
 .input_field {
-    background-color: var(--primary);
-    outline: none
+  background-color: var(--primary);
+  outline: none;
 }
 
 .button_container {
-    /*LAYOUT*/
-    height: 85%;
-    width:85%;
-    padding:5px 0;
-    display:flex;
-    align-items: center;
-    overflow: hidden;
-    border-radius: 10px;
-    background-color: var(--primary);
-    justify-content: center;
-    column-gap: 20px;
+  /*LAYOUT*/
+  height: 85%;
+  width: 85%;
+  padding: 5px 0;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  border-radius: 10px;
+  background-color: var(--primary);
+  justify-content: center;
+  column-gap: 20px;
 }
 
 .project_info_container {
-    height: 50%;
-    width:100%;
-    align-items: center;
-    flex-direction: column;
-    display:flex;
-    justify-content: space-around;
+  height: 50%;
+  width: 100%;
+  align-items: center;
+  flex-direction: column;
+  display: flex;
+  justify-content: space-around;
 }
 
-.last_edited, .url_match, .project_name_container {
-    text-align: left;
-    width:65%;
-    font-size: 1rem;
-
+.last_edited,
+.url_match,
+.project_name_container {
+  text-align: left;
+  width: 65%;
+  font-size: 1rem;
 }
 
-.url_match b {
-    padding-right: 10px;
-    font-weight: 600;
-
+.url_match span {
+    font-size: 0.8rem;
 }
+
 
 .project_name_container {
-    display: flex
+  display: flex;
+  justify-content: flex-start;
 }
 
-.project_name_container h3 {
-    font-size: 0.9rem;
+.project_name_container > h3 {
+  max-width: 85%;
+}
+
+.url_match {
+  display: flex;
+  flex-direction: column;
+}
+.url_match span,
+.url_match b {
+  display: block;
+}
+
+.url_match span {
+    max-width: 100%;
+    overflow-x: auto;
 }
 
 .table_title {
-    font-weight: 600;
-    font-size: 0.9rem;
-
+  font-weight: 600;
+  font-size: 0.9rem;
 }
 
 .table_container {
-    height: 100%; /* or any height you want */
-    overflow-y: auto;
-    display: block;
-    width: 100%; 
+  height: 100%; /* or any height you want */
+  overflow-y: auto;
+  display: block;
+  width: 100%;
 }

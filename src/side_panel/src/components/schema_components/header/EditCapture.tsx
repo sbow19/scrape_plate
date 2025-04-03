@@ -1,9 +1,10 @@
-import { useContext, useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import * as styles from "./header.module.css";
 import useContent from "../../../../../shared/src/hooks/useContent";
 import SchemaMatchesContext from "../../../context/SchemaMatches";
 import { AppDropdown } from "../../../../../shared/src/components/dropdownSelector/AppDropdown";
 import ModelReducerContext from "../../../context/ModelReducerContext";
+import { EditButton } from "../../../../../shared/src/assets/icons/appIcons";
 
 export const EditCaptureHeader: React.FC<SchemaFormProps> = () => {
   /**
@@ -11,7 +12,6 @@ export const EditCaptureHeader: React.FC<SchemaFormProps> = () => {
    */
   const [formModel, modelReducerObject] = useContext(ModelReducerContext);
   /* FETCH PROJECT NAME AND CAPTURE NAME FROM USER CONTENT MODEL */
-
 
   const [projectName, setProjectName] = useState("");
 
@@ -56,14 +56,26 @@ export const EditCaptureHeader: React.FC<SchemaFormProps> = () => {
     setModel(JSON.parse(JSON.stringify(matchedSchema)));
   };
 
+  const nameInputRef = useRef(null);
+  const handleFocus = (e) => {
+    e.current.focus();
+  };
+
   return (
     <>
       <h3>Edit Capture</h3>
 
       <div className={styles.content_line}>
         <label htmlFor="">
-          <b>URL Match: {formModel.url_match}</b>{" "}
+          <b>URL Match:</b>{" "}
         </label>
+        <textarea
+          readOnly
+          value={formModel.url_match}
+          onChange={(e) => {
+            modelReducerObject.update("url_match", e.target.value);
+          }}
+        />
       </div>
 
       <div className={styles.content_line}>
@@ -72,35 +84,40 @@ export const EditCaptureHeader: React.FC<SchemaFormProps> = () => {
         </label>
         <input
           type="text"
+          ref={nameInputRef}
           value={formModel?.name ?? ""}
           onChange={(e) => {
             modelReducerObject.update("name", e.target.value);
           }}
           maxLength={20}
         />
+        <EditButton
+          pathFill="none"
+          strokeColor="black"
+          height={20}
+          width={20}
+          onClick={() => {
+            handleFocus(nameInputRef);
+          }}
+          title="Edit Capture Name"
+        />
       </div>
 
       <div className={styles.content_line}>
-        <p>
-          <b>
-            Schema:
-            <AppDropdown
-              options={schemaNames}
-              set={matchingSchemasDetails[0].name}
-              onChange={handleSchemaChange}
-            ></AppDropdown>
-          </b>{" "}
-        </p>
+        <b>Schema:</b>{" "}
+        <AppDropdown
+          options={schemaNames}
+          set={matchingSchemasDetails[0].name}
+          onChange={handleSchemaChange}
+        ></AppDropdown>
       </div>
 
       <div className={styles.content_line}>
-        <p>
-          <b>Project: {projectName ?? ""} </b>{" "}
-        </p>
+        <b>Project:  </b>{projectName ?? ""}
       </div>
 
       <div className={styles.table_header_container}>
-        <h4>Capture</h4>
+        <h4 className={styles.table_header}>Capture</h4>
       </div>
     </>
   );

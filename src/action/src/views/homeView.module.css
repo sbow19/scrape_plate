@@ -14,11 +14,28 @@
 
 .project_name_wrapper {
     /*Layout*/
-    width: 100%;
+    width: 85%;
     display: flex;
     justify-content: center;
     column-gap: 20px;
+    position: relative;
 }
+
+.project_name_wrapper span {
+    font-size: 1rem;
+    max-width: 50%;
+    overflow-y: hidden;
+    overflow-x: auto;
+}
+
+.project_name_wrapper div {
+    position: absolute;
+    top: 0;
+    right: 10%;
+    display: flex;
+}
+
+
 
 .current_project_container{
     /*LAYOUT*/

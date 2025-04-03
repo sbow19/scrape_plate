@@ -1,45 +1,83 @@
-input {
-    background-color: var(--primary);
-    outline: none;
-    max-width: 50%;
-  }
-  
-  table {
-    width: 100%;
-    height: 250px;
-    overflow: hidden;
-    border-collapse: collapse;
-    table-layout: fixed;
-  }
-  
-  thead,
-  tbody tr {
-    display: table; /* Ensure the rows are displayed as table rows */
-    width: 100%;
-    table-layout: fixed; /* Helps ensure the columns have a consistent layout */
-  
-    /*STYLE*/
-    font-size: 0.7rem;
-  }
-  
-  tbody {
-    overflow-y: auto; /* Enable vertical scrolling */
-    height: 250px; /* Set the max height for scrolling */
-    width: 100%;
-    display: block;
-    padding-right: 5px
-  }
-  
-  tbody::-webkit-scrollbar {
-    display: block;
-  }
-  
-  tr {
-      margin: 10px 0;
-  }
+.table_outer {
+  width: 100%;
+  border-collapse: collapse;
+  height: 300px;
+  table-layout: fixed;
+  overflow: hidden;
+}
 
-  tr td:nth-child(3) {
-    width: 20px;
-  }
+.table_body {
+  overflow-y: auto; /* Enable vertical scrolling */
+  max-height: 300px;
+  min-height: 300px;
+  width: 100%;
+  display: block;
+  position: relative;
+  padding-right: 5px;
+
+}
+
+thead {
+  display: flex
+}
+
+thead td {
+  flex: 1.5;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+thead .options_header {
+  flex: .4
+}
+
+thead,
+tbody tr {
+  width: 100%;
+  display: flex;
 
 
+  /*STYLE*/
+  font-size: 0.65rem;
+}
+
+tbody tr {
+  border-top: solid black 1px;
+}
+
+tbody::-webkit-scrollbar {
+  display: block;
+}
+
+/*SCHEMA ROWS*/
+.schema_row_container {
+  height: 65px;
+  overflow: hidden;
+  max-width: 100%;
+  display: flex;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
+.data_cell{
+  flex: 1.5;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  font-size: 0.9rem;
+  justify-content: space-between;
+  border-right: black 1px solid;
+  padding-right: 3px;
+}
+
+.data_cell input {
+  min-width:85%;
+  max-width: 85%
+}
+
+.schema_row_container .option_container{
+  flex: 0.4;
+  display: flex;
+  justify-content: center;
+  align-items: center
+}

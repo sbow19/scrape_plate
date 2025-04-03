@@ -43,29 +43,25 @@ export const EditSchemaHeader: React.FC<SchemaFormProps> = () => {
         <label htmlFor="">
           <b>URL Match:</b>{" "}
         </label>
-        <input
-          type="text"
+        <textarea
           value={formModel.url_match}
           onChange={(e) => {
             modelReducerObject.update("url_match", e.target.value);
           }}
-          maxLength={20}
         />
       </div>
 
       <div className={styles.content_line}>
-        <b>
-          Schema:
-          <AppDropdown
-            options={schemaNames}
-            set={matchingSchemasDetails[0].name}
-            onChange={handleSchemaChange}
-          ></AppDropdown>
-        </b>{" "}
+        <b >Schema:</b>{" "}
+        <AppDropdown
+          options={schemaNames}
+          set={matchingSchemasDetails[0].name}
+          onChange={handleSchemaChange}
+        ></AppDropdown>
       </div>
 
       <div className={styles.table_header_container}>
-        <h4>Schema</h4>
+        <h4 className={styles.table_header}>Schema</h4>
       </div>
     </>
   );

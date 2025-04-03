@@ -90,7 +90,7 @@ export const SchemaTable: React.FC<SchemaFormTableProps> = ({ operation }) => {
 
       // RESET INPUT RE STYLE
       inputRef.current.style.border = "";
-      inputRef.current.style.color = "white";
+      inputRef.current.style.color = "black";
       inputRef.current.style.innerText = "";
 
       // STEP 2: set delay for DOM value fetch, async operation
@@ -223,6 +223,8 @@ export const SchemaTable: React.FC<SchemaFormTableProps> = ({ operation }) => {
           <thead>
             <td>Key</td>
             <td>Value</td>
+            <td className={styles.options_header}>options</td>
+
           </thead>
           <tbody className={styles.table_body}>
             {formModel[objectType] &&
@@ -247,6 +249,7 @@ export const SchemaTable: React.FC<SchemaFormTableProps> = ({ operation }) => {
                 height={30}
                 width={30}
                 strokeColor="black"
+                pathFill="none"
                 title="Add Entry"
                 onClick={handleAdd}
               ></AddButton>
@@ -284,7 +287,10 @@ const TableRowTemplate = ({
       <td
         className={styles.schema_key_container}
         style={{
-          border: focusedCell === `${entryId}-key` ? "solid 1px red" : "none",
+          borderLeft: focusedCell === `${entryId}-key` ? "solid 1px red" : "none",
+          borderRight: focusedCell === `${entryId}-key` ? "solid 1px red" : "solid black 1px",
+          borderTop: focusedCell === `${entryId}-key` ? "solid 1px red" : "none",
+          borderBottom: focusedCell === `${entryId}-key` ? "solid 1px red" : "none"
         }}
         id={`${entryId}-key`}
         onClick={() => {
@@ -292,22 +298,6 @@ const TableRowTemplate = ({
         }}
       >
         <div className={styles.match_expression_container}>
-          <input
-            ref={keyRef}
-            type="text"
-            value={entry.key.match_expression}
-            maxLength={40}
-            autoFocus={focusedCell === `${entryId}-key` ? true : false}
-            onChange={(e) => {
-              handleChange(
-                matchedKeyRef,
-                e.target.value,
-                entryId,
-                "key",
-                "match_expression"
-              );
-            }}
-          />
           <AppDropdown
             options={["manual", "id", "css selector", "regex"]}
             set={entry.key.match_type}
@@ -321,8 +311,25 @@ const TableRowTemplate = ({
               );
             }}
           ></AppDropdown>
+          <textarea
+            placeholder="Please type match expression..."
+            ref={keyRef}
+            value={entry.key.match_expression}
+            maxLength={40}
+            autoFocus={focusedCell === `${entryId}-key` ? true : false}
+            onChange={(e) => {
+              handleChange(
+                matchedKeyRef,
+                e.target.value,
+                entryId,
+                "key",
+                "match_expression"
+              );
+            }}
+          />
         </div>
-        <div>
+        <div className={styles.example_match_container_outer}>
+          <p className={styles.example_match_title}>Match: </p>
           <p className={styles.example_match_container} ref={matchedKeyRef}>
             {entry.key.matched_value}
           </p>
@@ -330,17 +337,36 @@ const TableRowTemplate = ({
       </td>
       <td
         id={`${entryId}-value`}
+        className={styles.schema_value_container}
         style={{
-          border: focusedCell === `${entryId}-value` ? "solid 1px red" : "none",
+          borderLeft: focusedCell === `${entryId}-value` ? "solid 1px red" : "none",
+          borderRight: focusedCell === `${entryId}-value` ? "solid 1px red" : "solid black 1px",
+          borderTop: focusedCell === `${entryId}-value` ? "solid 1px red" : "none",
+          borderBottom: focusedCell === `${entryId}-value` ? "solid 1px red" : "none"
+
+
         }}
         onClick={() => {
           handleFocus(`${entryId}-value`);
         }}
       >
         <div className={styles.match_expression_container}>
-          <input
+          <AppDropdown
+            options={["id", "css selector", "regex"]}
+            set={entry.value.match_type}
+            onChange={(e) => {
+              handleChange(
+                valueRef,
+                e.target.value,
+                entryId,
+                "value",
+                "match_type"
+              );
+            }}
+          ></AppDropdown>
+          <textarea
+            placeholder="Please type match expression..."
             ref={valueRef}
-            type="text"
             value={entry.value.match_expression}
             maxLength={100}
             autoFocus={focusedCell === `${entryId}-value` ? true : false}
@@ -355,32 +381,21 @@ const TableRowTemplate = ({
               );
             }}
           />
-          <AppDropdown
-            options={["id", "css selector", "regex"]}
-            set={entry.value.match_type}
-            onChange={(e) => {
-              handleChange(
-                valueRef,
-                e.target.value,
-                entryId,
-                "value",
-                "match_type"
-              );
-            }}
-          ></AppDropdown>
         </div>
-        <div>
+        <div className={styles.example_match_container_outer}>
           {/* Example match, but is not saved to schema */}
-          e.g.:
+          <p className={styles.example_match_title}>Match:</p>
           <p className={styles.example_match_container} ref={matchedValueRef}>
             {entry.value.matched_value}
           </p>
         </div>
       </td>
-      <td>
+      <td className={styles.option_container}>
         <DeleteButton
           height={20}
           width={20}
+          pathFill="none"
+          strokeColor="black"
           onClick={() => {
             setToastState({
               open: true,

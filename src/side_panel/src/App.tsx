@@ -300,8 +300,7 @@ export const App = () => {
       style={{
         height: "95vh",
         minHeight: 680,
-        width: "100%",
-        maxWidth: 400,
+        width: "clamp(340px, 100%, 525px)",
         position: "relative",
         pointerEvents: "none",
       }}

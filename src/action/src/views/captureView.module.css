@@ -29,12 +29,23 @@
 }
 
 .created_at b, .last_edited b {
-    font-weight: 600;
-    padding-right: 10px;
+    padding-right: 10px
 }
 
+
 .project_name_container {
-    display: flex
+    display: flex;
+    justify-content: flex-start;
+}
+
+.project_name_container > h3 {
+    max-width: 85%;
+}
+
+.table_title {
+    font-weight: 600;
+    font-size: 0.9rem;
+
 }
 
 .table_container {
@@ -46,5 +57,7 @@
 
 .input_field {
     background-color: var(--primary);
-    outline: none
+    outline: none;
+    font-size: 14px;
+
 }

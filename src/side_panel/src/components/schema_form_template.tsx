@@ -178,7 +178,7 @@ export const SchemaFormTemplate: React.FC<SchemaFormTemplateProps> = ({
         <div className={styles.schema_button_container}>
           <AppButtonTemplate onClick={handleReset}>Reset</AppButtonTemplate>
           <AppButtonTemplate onClick={handleSave}>
-            Save Changes
+            Save
           </AppButtonTemplate>
         </div>
       </div>

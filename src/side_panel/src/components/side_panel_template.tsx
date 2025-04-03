@@ -32,14 +32,13 @@ export const SidePanelTemplate: React.FC = ({ children }) => {
 
             <div className={styles.popup_header_options_container}>
               <ExitButton
-                height={40}
-                width={40}
+                height={30}
+                width={30}
                 title="Exit"
                 pathFill="transparent"
                 strokeColor="black"
                 svgFill="#353535ff"
                 onClick={() => {
-                  console.log("Hello")
                   window.close();
                 }}
               />

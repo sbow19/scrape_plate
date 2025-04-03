@@ -12,9 +12,7 @@ import { AppTableTemplate } from "../components/table/appTable";
 
 import * as styles from "./homeView.module.css";
 import { useContext, useEffect, useMemo, useState } from "react";
-import {
-  tableDataConverter,
-} from "../../../shared/src/utils/helpers";
+import { tableDataConverter } from "../../../shared/src/utils/helpers";
 import { AppButtonTemplate } from "../../../shared/src/components/buttons/appButton";
 import { useNavigate } from "react-router";
 import ToastContext from "../context/Toast";
@@ -48,9 +46,9 @@ export const HomeView = () => {
           }
 
           // Search tem
-          const searchTerm = !v.currentProject ? "NO_MATCH_DO_NOT_USE" : v.currentProject
-
-          
+          const searchTerm = !v.currentProject
+            ? "NO_MATCH_DO_NOT_USE"
+            : v.currentProject;
 
           return userContentEvents.emit("search", {
             term: searchTerm,
@@ -159,29 +157,30 @@ const ContentComponent = ({ matchingSchemas, currentProject }) => {
           <div className={styles.project_name_wrapper}>
             {currentProject.name ? (
               <>
-                <p>
-                  {/* Current project name */} {currentProject.name}{" "}
-                </p>
-                <AddButton
-                  height={20}
-                  width={20}
-                  strokeColor="black"
-                  pathFill="none"
-                  title="Change Project"
-                  onClick={() => {
-                    navigate(`/project`);
-                  }}
-                />
-                <EditButton
-                  height={20}
-                  width={20}
-                  strokeColor="black"
-                  pathFill="none"
-                  title="Edit Project"
-                  onClick={() => {
-                    navigate(`/project/${currentProject.id}`);
-                  }}
-                />
+                <span>{currentProject.name}</span>
+
+                <div>
+                  <AddButton
+                    height={20}
+                    width={20}
+                    strokeColor="black"
+                    pathFill="none"
+                    title="Change Project"
+                    onClick={() => {
+                      navigate(`/project`);
+                    }}
+                  />
+                  <EditButton
+                    height={20}
+                    width={20}
+                    strokeColor="black"
+                    pathFill="none"
+                    title="Edit Project"
+                    onClick={() => {
+                      navigate(`/project/${currentProject.id}`);
+                    }}
+                  />
+                </div>
               </>
             ) : (
               <>
@@ -260,12 +259,12 @@ const SecondaryActions = () => {
         </AppButtonTemplate>,
         <AppButtonTemplate
           onClick={() => {
-          openSidePanel(tab, "create_schema", {
-            name: "",
-            id: "",
-            url_match: tab?.url ?? "",
-            schema: {},
-          });
+            openSidePanel(tab, "create_schema", {
+              name: "",
+              id: "",
+              url_match: tab?.url ?? "",
+              schema: {},
+            });
           }}
         >
           Create
@@ -282,7 +281,7 @@ const SecondaryActions = () => {
 
 const PrimaryAction = ({ matchingSchemas, currentProject }) => {
   const [, setToastState] = useContext(ToastContext);
-  const tab = useContext(TabContext)
+  const tab = useContext(TabContext);
   return (
     <>
       <ScrapeButton
@@ -290,19 +289,17 @@ const PrimaryAction = ({ matchingSchemas, currentProject }) => {
         width={30}
         title="Scrape"
         onClick={() => {
-
-          if(!currentProject.id){
+          if (!currentProject.id) {
             setToastState({
               open: true,
               text: <p>Must set project before scraping page</p>,
-              timer: 1250
-            })
-            return
+              timer: 1250,
+            });
+            return;
           }
           if (matchingSchemas && matchingSchemas.length > 0) {
-
             // Trigger scrape on side panel
-            openSidePanel(tab, "edit_capture", matchingSchemas)
+            openSidePanel(tab, "edit_capture", matchingSchemas);
           } else {
             setToastState({
               open: true,

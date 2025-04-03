@@ -126,7 +126,7 @@ const ContentComponent = ({
           />
         </div>
         <div className={styles.url_match}>
-          <b>URL Match:</b> {schemaDetails.url_match}
+          <b>URL Match:</b> <span>{schemaDetails.url_match}</span> 
         </div>
         <div className={styles.table_title}>Schema Details</div>
       </div>

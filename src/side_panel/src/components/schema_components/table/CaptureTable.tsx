@@ -6,6 +6,7 @@ import {
 } from "../../../../../shared/src/assets/icons/appIcons";
 import { AppButtonTemplate } from "../../../../../shared/src/components/buttons/appButton";
 import ModelReducerContext from "../../../context/ModelReducerContext";
+import * as styles from "./CaptureTable.module.css";
 
 /**
  * When keys are deleted, updated or added, call the modelREducerObject
@@ -43,12 +44,13 @@ export const CaptureTable: React.FC<SchemaFormTableProps> = ({ operation }) => {
   return (
     <>
       {formModel && (
-        <table>
+        <table className={styles.table_outer}>
           <thead>
             <td>Key</td>
             <td>Value</td>
+            <td className={styles.options_header}>Options</td>
           </thead>
-          <tbody>
+          <tbody className={styles.table_body}>
             {formModel[objectType] &&
               Object.values(formModel[objectType]).map((entry: SchemaEntry) => {
                 return (
@@ -80,17 +82,11 @@ const TableRowTemplate = ({
   const keyRef = useRef<HTMLInputElement>(null);
   const valueRef = useRef<HTMLInputElement>(null);
   return (
-    <tr key={index}>
-      <td>
-        <input
-          ref={keyRef}
-          type="text"
-          value={entry.key.matched_value}
-          maxLength={20}
-          readOnly
-        />
+    <tr className={styles.schema_row_container} key={index}>
+      <td className={styles.data_cell}>
+        {entry.key.matched_value}
       </td>
-      <td>
+      <td className={styles.data_cell}>
         <input
           ref={valueRef}
           type="text"
@@ -101,6 +97,8 @@ const TableRowTemplate = ({
           }}
         />
         <EditButton
+          pathFill="none"
+          strokeColor="black"
           height={20}
           width={20}
           title="Edit"
@@ -109,8 +107,11 @@ const TableRowTemplate = ({
           }}
         />
       </td>
-      <td>
+        <td className={styles.option_container}>
+      
         <DeleteButton
+          pathFill="none"
+          strokeColor="black"
           height={20}
           width={20}
           title="Delete"
