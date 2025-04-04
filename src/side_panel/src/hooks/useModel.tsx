@@ -330,6 +330,7 @@ export const useModel = (
 
               // Create new row if newRowEntryId is undefined
               if (cellListRef.current.rowOrder.length < currentRowIndex + 2) {
+                if(objectTypeRef.current === "capture") return
                 reducerObjectRef.current?.addNewRow();
                 return;
               }
