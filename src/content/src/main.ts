@@ -81,7 +81,9 @@ import { messageFactory } from "../../shared/src/utils/helpers";
   ) {
     // Get all child nodes of the parent, including text nodes
     const parentChildren = Array.from(parent.childNodes);
+
     const filteredChildren = filterParentChildren(parentChildren);
+
     return filteredChildren[childPositionIndex];
   }
 
@@ -109,12 +111,12 @@ import { messageFactory } from "../../shared/src/utils/helpers";
     let currentParent = document.querySelector("html");
 
     // Loop through array and select element from previous search
-    for (let i = 0; i < selectorArray.length; i++) {
+    for (let i = 0; i < selectorArray.length - 1; i++) {
       if (!currentParent || typeof currentParent === "string") return currentParent;
       let [, childIndex] = parseMatchString(selectorArray[i]);
       currentParent = getChildNodeByPosition(currentParent, childIndex);
-
     }
+
 
     // Current parent should be final text node
     return currentParent;
