@@ -37,10 +37,10 @@ git clone https://github.com/sbow19/scrape_plate.git
 [![Create first schema](https://i.vimeocdn.com/video/1072854509.jpg)](https://vimeo.com/1072854509)
 
 ### Capturing Content from Companies House
-- [![Capturing content from Companies House](https://i.vimeocdn.com/video/1072854487.jpg)](https://vimeo.com/1072854487)
+[![Capturing content from Companies House](https://i.vimeocdn.com/video/1072854487.jpg)](https://vimeo.com/1072854487)
 
 ### Using Multiple Schemas
-- [![Using multiple schemas](https://i.vimeocdn.com/video/1072854500.jpg)](https://vimeo.com/1072854500)
+[![Using multiple schemas](https://i.vimeocdn.com/video/1072854500.jpg)](https://vimeo.com/1072854500)
 
 
 
