@@ -23,15 +23,23 @@ git clone https://github.com/sbow19/your-extension-repository.git
 
 6. The extension will now be loaded in Chrome and should appear in your toolbar or Extensions page.
 
-## Introduction
-
-- Goals:
+## Goals
   - Create a functional Chrome Extension allowing a user to scrape webpages.
   - Implement a variety of software engineering skills, concepts, and some more advanced usage of JavaScript/ TypeScript.
   - Implement testing to some degree.
   - Minimise reliance on external packages.
   - Use React for UI. Not for performance but more so to practice using framework, custom hook creation, webpack/vite tooling.
   - Implement CRUD functionality with some complex state management across different components of the Chrome Extension -- using IndexedDB.
+
+## Demo Video
+
+- [Creating new schema](https://github.com/sbow19/scrape-plate/raw/main/first_schema.mp4)
+
+- [Capturing Content from Companies House](https://github.com/sbow19/scrape-plate/raw/main/captures.mp4)
+
+- [Using multiple schemas](https://github.com/sbow19/scrape-plate/raw/main/multiple_schemas.mp4)
+
+
 
 ## Roadmap
 
@@ -158,7 +166,7 @@ git clone https://github.com/sbow19/your-extension-repository.git
 
 - I created a extension messaging type BackgroundMessage, which carries information about the desired operation and associated data. E.g. database, openSidePanel, getCurrentTab.
 
-### Functionalty
+### Functionality
 
 - Create context menu options.
 - Listen out for shortcut key events and trigger appropriate response.
