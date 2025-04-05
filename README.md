@@ -33,7 +33,7 @@ git clone https://github.com/sbow19/scrape_plate.git
 
 ## Demo Video
 
-### Create first Schema 
+### Create First Schema 
 [![Create first schema](https://i.vimeocdn.com/video/1072854509.jpg)](https://vimeo.com/1072854509)
 
 ### Capturing Content from Companies House
