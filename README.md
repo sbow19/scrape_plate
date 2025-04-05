@@ -10,7 +10,7 @@ Not currently available on Chrome Store, but if you want to use the extension, f
 1. Clone or download this repository to your local machine.
 
 ```bash 
-git clone https://github.com/sbow19/your-extension-repository.git
+git clone https://github.com/sbow19/scrape_plate.git
 ```
 
 2. Launch Google Chrome browser on your machine.
@@ -33,11 +33,11 @@ git clone https://github.com/sbow19/your-extension-repository.git
 
 ## Demo Video
 
-- [Creating new schema](https://github.com/sbow19/scrape-plate/raw/main/first_schema.mp4)
+- [Creating new schema](https://github.com/sbow19/scrape_plate/raw/main/first_schema.mp4)
 
-- [Capturing Content from Companies House](https://github.com/sbow19/scrape-plate/raw/main/captures.mp4)
+- [Capturing Content from Companies House](https://github.com/sbow19/scrape_plate/raw/main/captures.mp4)
 
-- [Using multiple schemas](https://github.com/sbow19/scrape-plate/raw/main/multiple_schemas.mp4)
+- [Using multiple schemas](https://github.com/sbow19/scrape_plate/raw/main/multiple_schemas.mp4)
 
 
 
